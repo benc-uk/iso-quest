@@ -1,0 +1,9 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+include_ext = [ "go" ]
+cmd = "go build -o ./tmp/main ./main.go"
+
+[misc]
+clean_on_exit = true
