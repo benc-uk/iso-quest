@@ -2,10 +2,7 @@ module iso-quest
 
 go 1.19
 
-require (
-	github.com/hajimehoshi/ebiten v1.12.12
-	github.com/hajimehoshi/ebiten/v2 v2.4.16
-)
+require github.com/hajimehoshi/ebiten/v2 v2.4.16
 
 require (
 	github.com/ebitengine/purego v0.0.0-20220905075623-aeed57cda744 // indirect
