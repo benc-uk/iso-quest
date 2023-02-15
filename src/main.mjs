@@ -29,8 +29,7 @@ window.onload = async () => {
 
   const objFile = await fetchFile('./objects/test.obj')
 
-  const obj = new parseOBJ(objFile)
-  console.log(obj)
+  const objArrays = new parseOBJ(objFile)
 
   // Use TWLG to set up the shaders and program
   let programInfo = null
@@ -55,7 +54,7 @@ window.onload = async () => {
   //   texcoord: [1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
   //   indices:  [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23],
   // };
-  const bufferInfo = twgl.createBufferInfoFromArrays(gl, obj)
+  const bufferInfo = twgl.createBufferInfoFromArrays(gl, objArrays)
 
   // load a texture from 9.png file
   const tex = twgl.createTexture(gl, {
