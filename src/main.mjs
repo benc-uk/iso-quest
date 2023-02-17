@@ -39,7 +39,7 @@ window.onload = async () => {
   }
 
   // Load and parse OBJ file
-  const objFile = await fetchFile(OBJ_PATH + 'test.obj')
+  const objFile = await fetchFile(OBJ_PATH + 'sword.obj')
   const { matLibNames, geometries } = new parseOBJ(objFile)
 
   // We assume that the OBJ file has a SINGLE material library
