@@ -12,6 +12,11 @@ let webglVertexData = [
   [], // normals
 ]
 
+let geometries = []
+let geometry
+let material = 'default'
+let materialLibs = []
+
 const keywords = {
   v(parts) {
     objPositions.push(parts.map(parseFloat))
@@ -26,12 +31,22 @@ const keywords = {
   },
 
   f(parts) {
+    setGeometry()
     const numTriangles = parts.length - 2
     for (let tri = 0; tri < numTriangles; ++tri) {
       addVertex(parts[0])
       addVertex(parts[tri + 1])
       addVertex(parts[tri + 2])
     }
+  },
+
+  usemtl(_, unparsedArgs) {
+    material = unparsedArgs
+    newGeometry()
+  },
+
+  mtllib(_, unparsedArgs) {
+    materialLibs.push(unparsedArgs)
   },
 }
 
@@ -50,19 +65,24 @@ function addVertex(vert) {
 }
 
 export function parseOBJ(text) {
-  // objPositions = [[0, 0, 0]]
-  // objTexcoords = [[0, 0]]
-  // objNormals = [[0, 0, 0]]
+  objPositions = [[0, 0, 0]]
+  objTexcoords = [[0, 0]]
+  objNormals = [[0, 0, 0]]
 
-  // // same order as `f` indices
-  // objVertexData = [objPositions, objTexcoords, objNormals]
+  // same order as `f` indices
+  objVertexData = [objPositions, objTexcoords, objNormals]
 
-  // // same order as `f` indices
-  // webglVertexData = [
-  //   [], // positions
-  //   [], // texcoords
-  //   [], // normals
-  // ]
+  // same order as `f` indices
+  webglVertexData = [
+    [], // positions
+    [], // texcoords
+    [], // normals
+  ]
+
+  geometries = []
+  geometry = null
+  material = 'default'
+  materialLibs = []
 
   const keywordRE = /(\w*)(?: )*(.*)/
   const lines = text.split('\n')
@@ -91,8 +111,36 @@ export function parseOBJ(text) {
   }
 
   return {
-    position: webglVertexData[0],
-    texcoord: webglVertexData[1],
-    normal: webglVertexData[2],
+    matLibNames: materialLibs,
+    geometries: geometries,
+  }
+}
+
+function newGeometry() {
+  // If there is an existing geometry and it's
+  // not empty then start a new one.
+  if (geometry && geometry.data.position.length) {
+    geometry = undefined
+  }
+}
+
+function setGeometry() {
+  if (!geometry) {
+    const position = []
+    const texcoord = []
+    const normal = []
+
+    webglVertexData = [position, texcoord, normal]
+
+    geometry = {
+      material,
+      data: {
+        position,
+        texcoord,
+        normal,
+      },
+    }
+
+    geometries.push(geometry)
   }
 }

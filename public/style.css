@@ -8,10 +8,10 @@ canvas {
   display: block;
   /* width: 100vw;
   height: 100vh; */
-  width: 1280px;
-  height: 960 px;
+  /* width: 1280px;
+  height: 960px; */
   background-color: rgb(53, 51, 51);
-  image-rendering: pixelated;
+  /* image-rendering: pixelated; */
 }
 
 #overlay {

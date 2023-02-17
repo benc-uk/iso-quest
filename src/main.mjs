@@ -2,14 +2,17 @@ import { fetchShaders, fetchFile, setOverlay } from './utils.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 import { parseOBJ } from './obj-parser.mjs'
+import { parseMTL } from './mtl-parser.mjs'
 
+const OBJ_PATH = './objects/'
 const FAR_CLIP = 140
 const AA_ENABLED = false
-const ISO_SCALE = 7
+const ISO_SCALE = 13
 const RAD_45 = Math.PI / 4
 const RAD_30 = Math.PI / 6
 let ASPECT
 let time = 0.0
+const models = []
 
 //
 // Start here :D
@@ -27,9 +30,27 @@ window.onload = async () => {
   // Load shaders from external files
   const { vertex, fragment } = await fetchShaders('./shaders/vert.glsl', './shaders/frag.glsl')
 
-  const objFile = await fetchFile('./objects/test.obj')
+  // Placeholder for creating model
+  models[0] = {
+    name: 'test.obj',
+    parts: [],
+    materials: {},
+    position: [0, 0, 0],
+  }
 
-  const objArrays = new parseOBJ(objFile)
+  // Load and parse OBJ file
+  const objFile = await fetchFile(OBJ_PATH + 'test.obj')
+  const { matLibNames, geometries } = new parseOBJ(objFile)
+
+  // We assume that the OBJ file has a SINGLE material library
+  // This is a good assumption for nearly all models I've seen
+  const mtlFile = await fetchFile(OBJ_PATH + matLibNames[0])
+  models[0].materials = parseMTL(mtlFile)
+
+  for (let g of geometries) {
+    const bufferInfo = twgl.createBufferInfoFromArrays(gl, g.data)
+    models[0].parts.push({ bufferInfo, materialName: g.material })
+  }
 
   // Use TWLG to set up the shaders and program
   let programInfo = null
@@ -47,37 +68,24 @@ window.onload = async () => {
     color = color.concat(c1, c1, c1, c1)
   }
 
-  // prettier-ignore
-  // const arrays = {
-  //   position: [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1],
-  //   normal:   [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1],
-  //   texcoord: [1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
-  //   indices:  [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23],
-  // };
-  const bufferInfo = twgl.createBufferInfoFromArrays(gl, objArrays)
-
-  // load a texture from 9.png file
-  const tex = twgl.createTexture(gl, {
-    src: './textures/9.png',
-    minMag: gl.LINEAR,
-  })
-
-  const uniforms = {
+  const worldUniforms = {
     u_worldInverseTranspose: mat4.create(),
     u_worldViewProjection: mat4.create(),
 
     // Move light somewhere in the world
-    u_lightWorldPos: [-33, 60, 40],
-    u_lightColor: [1, 1, 1],
+    u_lightWorldPos: [10, 5, 20],
+    u_lightColor: [1.0, 1.0, 1.0],
     u_lightAmbient: [0.2, 0.2, 0.2],
-    u_texture: tex,
   }
 
   const camera = mat4.create()
   mat4.targetTo(camera, [0, 0, 5.5], [0, 0, 0], [0, 1, 0])
   const view = mat4.create()
   mat4.invert(view, camera)
-  uniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
+  worldUniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
+
+  gl.enable(gl.DEPTH_TEST)
+  gl.enable(gl.CULL_FACE)
 
   // Draw the scene repeatedly every frame
   var prevTime = 0
@@ -86,8 +94,25 @@ window.onload = async () => {
     const deltaTime = now - prevTime // Get smoothed time difference
     prevTime = now
 
-    drawScene(gl, programInfo, bufferInfo, uniforms, view, deltaTime)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+    for (let model of models) {
+      const uniforms = {
+        ...worldUniforms,
+      }
+
+      for (let part of model.parts) {
+        // Get the material for this part and populate the uniforms
+        for (let [key, value] of Object.entries(model.materials[part.materialName])) {
+          uniforms[`u_${key}`] = value
+        }
+
+        renderPart(part, gl, programInfo, uniforms, view)
+      }
+    }
+
     requestAnimationFrame(render)
+    time += deltaTime
   }
 
   // Start the render loop first time
@@ -95,18 +120,14 @@ window.onload = async () => {
 }
 
 //
-// Draw the scene.
+// Render a geometry part
 //
-function drawScene(gl, programInfo, bufferInfo, uniforms, view, deltaTime) {
+function renderPart(part, gl, programInfo, uniforms, view) {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
   // An isometric projection
   const projection = mat4.ortho(mat4.create(), -ASPECT * ISO_SCALE, ASPECT * ISO_SCALE, -ISO_SCALE, ISO_SCALE, 0.1, FAR_CLIP)
   const viewProjection = mat4.multiply(mat4.create(), projection, view)
-
-  gl.enable(gl.DEPTH_TEST)
-  gl.enable(gl.CULL_FACE)
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
   // Move object into the world
   const world = mat4.create()
@@ -123,10 +144,8 @@ function drawScene(gl, programInfo, bufferInfo, uniforms, view, deltaTime) {
   mat4.multiply(uniforms.u_worldViewProjection, viewProjection, world)
 
   gl.useProgram(programInfo.program)
-  twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo)
+  twgl.setBuffersAndAttributes(gl, programInfo, part.bufferInfo)
   twgl.setUniforms(programInfo, uniforms)
 
-  twgl.drawBufferInfo(gl, bufferInfo)
-
-  time += deltaTime
+  twgl.drawBufferInfo(gl, part.bufferInfo)
 }
