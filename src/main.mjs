@@ -12,7 +12,9 @@ const RAD_45 = Math.PI / 4
 const RAD_30 = Math.PI / 6
 let ASPECT
 let time = 0.0
-const models = []
+const models = {}
+const instances = []
+let retroMode = false
 
 //
 // Start here :D
@@ -20,6 +22,32 @@ const models = []
 window.onload = async () => {
   const gl = document.querySelector('canvas').getContext('webgl2', { antialias: AA_ENABLED })
   ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
+
+  // Add event listener for retro mode
+  document.addEventListener('keydown', (event) => {
+    const keyName = event.key
+    if (keyName === 'r') {
+      retroMode = !retroMode
+
+      // get canvas element
+      const canvas = document.querySelector('canvas')
+      if (retroMode) {
+        canvas.style.imageRendering = 'pixelated'
+        canvas.style.width = '1024px'
+        canvas.style.height = '768px'
+        canvas.width = 1024 / 6
+        canvas.height = 768 / 6
+        gl.ant
+      } else {
+        canvas.style.imageRendering = 'auto'
+        canvas.width = 1024
+        canvas.height = 768
+      }
+
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+      ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
+    }
+  })
 
   // If we don't have a GL context, give up now
   if (!true) {
@@ -31,12 +59,15 @@ window.onload = async () => {
   const { vertex, fragment } = await fetchShaders('./shaders/vert.glsl', './shaders/frag.glsl')
 
   // Placeholder for creating model
-  models[0] = {
-    name: 'test.obj',
+  models['cube'] = {
     parts: [],
     materials: {},
-    position: [0, 0, 0],
   }
+
+  instances.push({ position: [0, 0, 0], model: models['cube'] })
+  instances.push({ position: [6.5, 0, 0], model: models['cube'] })
+  instances.push({ position: [5, 0, -8], model: models['cube'] })
+  instances.push({ position: [-9, 0, -2], model: models['cube'] })
 
   // Load and parse OBJ file
   const objFile = await fetchFile(OBJ_PATH + 'sword.obj')
@@ -45,11 +76,11 @@ window.onload = async () => {
   // We assume that the OBJ file has a SINGLE material library
   // This is a good assumption for nearly all models I've seen
   const mtlFile = await fetchFile(OBJ_PATH + matLibNames[0])
-  models[0].materials = parseMTL(mtlFile)
+  models['cube'].materials = parseMTL(mtlFile)
 
   for (let g of geometries) {
     const bufferInfo = twgl.createBufferInfoFromArrays(gl, g.data)
-    models[0].parts.push({ bufferInfo, materialName: g.material })
+    models['cube'].parts.push({ bufferInfo, materialName: g.material })
   }
 
   // Use TWLG to set up the shaders and program
@@ -73,13 +104,13 @@ window.onload = async () => {
     u_worldViewProjection: mat4.create(),
 
     // Move light somewhere in the world
-    u_lightWorldPos: [10, 5, 20],
+    u_lightWorldPos: [-4, 5, 30],
     u_lightColor: [1.0, 1.0, 1.0],
     u_lightAmbient: [0.2, 0.2, 0.2],
   }
 
   const camera = mat4.create()
-  mat4.targetTo(camera, [0, 0, 5.5], [0, 0, 0], [0, 1, 0])
+  mat4.targetTo(camera, [10, 8, 10], [0, 0, 0], [0, 1, 0])
   const view = mat4.create()
   mat4.invert(view, camera)
   worldUniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
@@ -96,7 +127,9 @@ window.onload = async () => {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    for (let model of models) {
+    for (let instance of instances) {
+      const model = instance.model
+
       const uniforms = {
         ...worldUniforms,
       }
@@ -107,7 +140,7 @@ window.onload = async () => {
           uniforms[`u_${key}`] = value
         }
 
-        renderPart(part, gl, programInfo, uniforms, view)
+        renderPart(part, gl, programInfo, uniforms, view, instance.position)
       }
     }
 
@@ -122,18 +155,14 @@ window.onload = async () => {
 //
 // Render a geometry part
 //
-function renderPart(part, gl, programInfo, uniforms, view) {
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-
+function renderPart(part, gl, programInfo, uniforms, view, pos) {
   // An isometric projection
-  const projection = mat4.ortho(mat4.create(), -ASPECT * ISO_SCALE, ASPECT * ISO_SCALE, -ISO_SCALE, ISO_SCALE, 0.1, FAR_CLIP)
+  const projection = mat4.ortho(mat4.create(), -ASPECT * ISO_SCALE, ASPECT * ISO_SCALE, -ISO_SCALE, ISO_SCALE, -4, FAR_CLIP)
   const viewProjection = mat4.multiply(mat4.create(), projection, view)
 
   // Move object into the world
   const world = mat4.create()
-  mat4.translate(world, world, [0.0, 0.0, -3.0])
-  mat4.rotate(world, world, RAD_30, [1, 0, 0])
-  mat4.rotate(world, world, RAD_45 * time, [0, 1, 0])
+  mat4.translate(world, world, pos)
   uniforms.u_world = world
 
   // Populate u_worldInverseTranspose - used for normals & shading

@@ -9,9 +9,9 @@ canvas {
   /* width: 100vw;
   height: 100vh; */
   /* width: 1280px;
-  height: 960px; */
+  height: 960px;
+  image-rendering: pixelated; */
   background-color: rgb(53, 51, 51);
-  /* image-rendering: pixelated; */
 }
 
 #overlay {
