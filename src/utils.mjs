@@ -1,7 +1,13 @@
 // ===== utils.mjs ===============================================================
 // A collection of helper functions, most were replaced with twgl
-// Ben Coleman, 2022
+// Ben Coleman, 2023
 // ===============================================================================
+
+import { parseOBJ } from './obj-parser.mjs'
+import { parseMTL } from './mtl-parser.mjs'
+import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
+
+const OBJ_PATH = './objects/'
 
 //
 // Load shader sources from external files using fetch, return both sources as strings
@@ -48,4 +54,28 @@ export function hideOverlay() {
   const overlay = document.getElementById('overlay')
   if (!overlay) return
   overlay.style.display = 'none'
+}
+
+// Helper to load a model from OBJ and MTL files
+export async function parseModel(name, gl) {
+  // Returned model object
+  const model = {
+    parts: [],
+    materials: {},
+  }
+
+  const objFile = await fetchFile(`${OBJ_PATH}${name}.obj`)
+  const { matLibNames, geometries } = new parseOBJ(objFile)
+
+  // We assume that the OBJ file has a SINGLE material library
+  // This is a good assumption for nearly all models I've seen
+  const mtlFile = await fetchFile(`${OBJ_PATH}${matLibNames[0]}`)
+  model.materials = parseMTL(mtlFile)
+
+  for (let g of geometries) {
+    const bufferInfo = twgl.createBufferInfoFromArrays(gl, g.data)
+    model.parts.push({ bufferInfo, materialName: g.material })
+  }
+
+  return model
 }

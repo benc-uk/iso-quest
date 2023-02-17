@@ -1,10 +1,7 @@
-import { fetchShaders, fetchFile, setOverlay } from './utils.mjs'
+import { fetchShaders, fetchFile, setOverlay, parseModel } from './utils.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
-import { parseOBJ } from './obj-parser.mjs'
-import { parseMTL } from './mtl-parser.mjs'
 
-const OBJ_PATH = './objects/'
 const FAR_CLIP = 140
 const AA_ENABLED = false
 const ISO_SCALE = 13
@@ -59,29 +56,12 @@ window.onload = async () => {
   const { vertex, fragment } = await fetchShaders('./shaders/vert.glsl', './shaders/frag.glsl')
 
   // Placeholder for creating model
-  models['cube'] = {
-    parts: [],
-    materials: {},
-  }
+  models['sword'] = await parseModel('sword', gl)
 
-  instances.push({ position: [0, 0, 0], model: models['cube'] })
-  instances.push({ position: [6.5, 0, 0], model: models['cube'] })
-  instances.push({ position: [5, 0, -8], model: models['cube'] })
-  instances.push({ position: [-9, 0, -2], model: models['cube'] })
-
-  // Load and parse OBJ file
-  const objFile = await fetchFile(OBJ_PATH + 'sword.obj')
-  const { matLibNames, geometries } = new parseOBJ(objFile)
-
-  // We assume that the OBJ file has a SINGLE material library
-  // This is a good assumption for nearly all models I've seen
-  const mtlFile = await fetchFile(OBJ_PATH + matLibNames[0])
-  models['cube'].materials = parseMTL(mtlFile)
-
-  for (let g of geometries) {
-    const bufferInfo = twgl.createBufferInfoFromArrays(gl, g.data)
-    models['cube'].parts.push({ bufferInfo, materialName: g.material })
-  }
+  instances.push({ position: [0, 0, 0], model: models['sword'] })
+  instances.push({ position: [6.5, 0, 0], model: models['sword'] })
+  instances.push({ position: [5, 0, -8], model: models['sword'] })
+  instances.push({ position: [-9, 0, -2], model: models['sword'] })
 
   // Use TWLG to set up the shaders and program
   let programInfo = null
