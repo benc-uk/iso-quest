@@ -61,8 +61,8 @@ export function parseOBJ(text) {
     },
 
     // Not used, but suppress warnings
-    s(_, blah) {},
-    o(_, blah) {},
+    s(_, _blah) {},
+    o(_, _blah) {},
   }
 
   function addVertex(vert) {
@@ -132,7 +132,7 @@ export function parseOBJ(text) {
   }
 
   // FIX: For those OBJ files that don't have texcoord data
-  for (let g of geometries) {
+  for (const g of geometries) {
     if (g.data.texcoord.length <= 0) {
       delete g.data.texcoord
     }

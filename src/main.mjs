@@ -14,7 +14,7 @@ const AA_ENABLED = false
 const ISO_SCALE = 50
 const LIGHT_COLOUR = [0.907, 0.682, 0.392]
 
-let camOffset = vec3.fromValues(-24, 0, 16)
+const camOffset = vec3.fromValues(-24, 0, 16)
 let camHeight = 0
 let camAngle = 0
 let lightX = 32
@@ -28,7 +28,7 @@ window.onload = async () => {
     'WebGL Isometric Game Engine<br><br>Move camera: WASD<br>Camera height: Z,X<br>Camera angle: Q,E<br>Move light: 1,2<br>Toggle retro mode: R'
   )
   const gl = document.querySelector('canvas').getContext('webgl2', { antialias: AA_ENABLED })
-  let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
+  const ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
 
   // If we don't have a GL context, give up now
   if (!gl) {
@@ -123,7 +123,7 @@ window.onload = async () => {
   gl.useProgram(programInfo.program)
 
   // Draw the scene repeatedly every frame
-  async function render(now) {
+  async function render(_now) {
     // Handle camera movement & rotation
     const camTarget = vec3.fromValues(0, 0, 0)
     const camPos = vec3.fromValues(10, 8 + camHeight, 10)
@@ -139,12 +139,12 @@ window.onload = async () => {
     worldUniforms.u_lightWorldPos[0] = lightX
 
     // An isometric projection
-    const projection = mat4.ortho(mat4.create(), -aspect * ISO_SCALE, aspect * ISO_SCALE, -ISO_SCALE, ISO_SCALE, -FAR_CLIP, FAR_CLIP)
+    const projection = mat4.ortho(mat4.create(), -ASPECT * ISO_SCALE, ASPECT * ISO_SCALE, -ISO_SCALE, ISO_SCALE, -FAR_CLIP, FAR_CLIP)
     const viewProjection = mat4.multiply(mat4.create(), projection, view)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    for (let instance of scene) {
+    for (const instance of scene) {
       renderInstance(instance, gl, programInfo, worldUniforms, viewProjection)
     }
 
@@ -158,7 +158,7 @@ window.onload = async () => {
 //
 // Render a model instance
 //
-function renderInstance(instance, gl, programInfo, uniforms, viewProjection, pos) {
+function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
   // World transform moves instance into the world
   const world = mat4.create()
   if (instance.position) mat4.translate(world, world, instance.position)
@@ -180,7 +180,7 @@ function renderInstance(instance, gl, programInfo, uniforms, viewProjection, pos
   mat4.multiply(uniforms.u_worldViewProjection, viewProjection, world)
 
   const model = instance.model
-  for (let part of model.parts) {
+  for (const part of model.parts) {
     applyMaterial(programInfo, model.materials[part.materialName])
 
     twgl.setBuffersAndAttributes(gl, programInfo, part.bufferInfo)

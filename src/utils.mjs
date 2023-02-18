@@ -85,7 +85,7 @@ export async function parseModel(name, gl) {
     diffuse: [0.2, 0.5, 0.97],
   }
 
-  for (let g of geometries) {
+  for (const g of geometries) {
     const bufferInfo = twgl.createBufferInfoFromArrays(gl, g.data)
     model.parts.push({ bufferInfo, materialName: g.material })
   }
