@@ -3,6 +3,7 @@
 // Taken from https://webglfundamentals.org/webgl/lessons/webgl-load-obj-w-mtl.html
 // Ben Coleman, 2023
 // ===============================================================================
+
 export function parseMTL(text) {
   const materials = {}
   let material

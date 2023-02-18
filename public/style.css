@@ -2,6 +2,7 @@ body,
 html {
   height: 100%;
   margin: 0;
+  background-color: black;
 }
 
 canvas {
@@ -11,6 +12,7 @@ canvas {
   /* width: 1280px;
   height: 960px;
   image-rendering: pixelated; */
+  margin: 0 auto;
   background-color: rgb(26, 24, 24);
 }
 

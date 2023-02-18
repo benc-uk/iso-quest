@@ -1,16 +1,20 @@
-import { fetchShaders, setOverlay, parseModel, applyMaterial } from './utils.mjs'
+// ===== main.mjs ==========================================================
+// Core engine loop
+// Ben Coleman, 2023
+// ===============================================================================
+
+import { fetchShaders, setOverlay, applyMaterial } from './utils.mjs'
+import { buildScene } from './scene.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 
-const DEG_90 = Math.PI / 2
-
 const FAR_CLIP = 100
-const AA_ENABLED = false
-const ISO_SCALE = 30
-const models = {}
-const instances = []
-let retroMode = false
+const AA_ENABLED = true
+const ISO_SCALE = 50
+const LIGHT_COLOUR = [0.907, 0.682, 0.392]
+
 let camX = 10
+let lightX = 32
 
 //
 // Start here :D
@@ -18,6 +22,7 @@ let camX = 10
 window.onload = async () => {
   setOverlay('WebGL Isometric Game Engine')
   const gl = document.querySelector('canvas').getContext('webgl2', { antialias: AA_ENABLED })
+  let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
 
   // If we don't have a GL context, give up now
   if (!gl) {
@@ -25,62 +30,28 @@ window.onload = async () => {
     return
   }
 
-  let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
-
   // Add event listener for retro mode
   document.addEventListener('keydown', (event) => {
     const keyName = event.key
-    if (keyName === 'r') {
-      retroMode = !retroMode
-
-      // get canvas element
-      const canvas = document.querySelector('canvas')
-      if (retroMode) {
-        canvas.style.imageRendering = 'pixelated'
-        canvas.style.width = '1024px'
-        canvas.style.height = '768px'
-        canvas.width = 1024 / 6
-        canvas.height = 768 / 6
-        gl.ant
-      } else {
-        canvas.style.imageRendering = 'auto'
-        canvas.width = 1024
-        canvas.height = 768
-      }
-
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-      aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
-    }
-
     if (keyName === 'ArrowLeft') {
       camX -= 1
     }
+
     if (keyName === 'ArrowRight') {
       camX += 1
+    }
+
+    if (keyName === 'ArrowUp') {
+      lightX += 4
+    }
+
+    if (keyName === 'ArrowDown') {
+      lightX -= 4
     }
   })
 
   // Load shaders from external files
   const { vertex, fragment } = await fetchShaders('./shaders/vert.glsl', './shaders/frag.glsl')
-
-  // Create scene
-  models['block'] = await parseModel('block', gl)
-  models['floor'] = await parseModel('floor', gl)
-
-  instances.push({ position: [0, 0, 0], model: models['block'], scale: [1, 1, 1.5] })
-  instances.push({ position: [-16, 0, 0], model: models['block'], scale: [1, 1, 1.5] })
-  instances.push({ position: [-32, 0, 0], model: models['block'], scale: [1, 1, 1.5] })
-  instances.push({ position: [-48, 0, 0], model: models['block'], scale: [1, 1, 1.5] })
-  instances.push({ position: [16, 0, 0], model: models['block'], scale: [1, 1, 1.5] })
-  instances.push({ position: [32, 0, 0], model: models['block'], scale: [1, 1, 1.5] })
-  instances.push({ position: [32, -8.8, 14.5], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [16, -8.8, 14.5], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [0, -8.8, 14.5], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [-16, -8.8, 14.5], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [32, -8.8, 14.5 + 16], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [16, -8.8, 14.5 + 16], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [0, -8.8, 14.5 + 16], model: models['floor'], rotate: [-DEG_90, 0, 0] })
-  instances.push({ position: [-16, -8.8, 14.5 + 16], model: models['floor'], rotate: [-DEG_90, 0, 0] })
 
   // Use TWLG to set up the shaders and program
   let programInfo = null
@@ -91,14 +62,16 @@ window.onload = async () => {
     return
   }
 
+  const scene = await buildScene(gl)
+
   const worldUniforms = {
     u_worldInverseTranspose: mat4.create(),
     u_worldViewProjection: mat4.create(),
 
     // Move light somewhere in the world
-    u_lightWorldPos: [-7, 9, 6],
-    u_lightColor: [1.0, 1.0, 1.0],
-    u_lightAmbient: [0.2, 0.2, 0.2],
+    u_lightWorldPos: [-8, 16, 32],
+    u_lightColor: LIGHT_COLOUR,
+    u_lightAmbient: [0.1, 0.1, 0.1],
   }
 
   gl.enable(gl.DEPTH_TEST)
@@ -110,13 +83,17 @@ window.onload = async () => {
     const camera = mat4.targetTo(mat4.create(), [camX, 8, 10], [0, 0, 0], [0, 1, 0])
     const view = mat4.invert(mat4.create(), camera)
     worldUniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
+
+    // Move the light
+    worldUniforms.u_lightWorldPos[0] = lightX
+
     // An isometric projection
     const projection = mat4.ortho(mat4.create(), -aspect * ISO_SCALE, aspect * ISO_SCALE, -ISO_SCALE, ISO_SCALE, -FAR_CLIP, FAR_CLIP)
     const viewProjection = mat4.multiply(mat4.create(), projection, view)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    for (let instance of instances) {
+    for (let instance of scene) {
       renderInstance(instance, gl, programInfo, worldUniforms, viewProjection)
     }
 
@@ -131,18 +108,16 @@ window.onload = async () => {
 // Render a model instance
 //
 function renderInstance(instance, gl, programInfo, uniforms, viewProjection, pos) {
-  // Move instance into the world
+  // World transform moves instance into the world
   const world = mat4.create()
-
-  if (instance.scale) {
-    mat4.scale(world, world, instance.scale)
-  }
-
-  mat4.translate(world, world, instance.position)
+  if (instance.position) mat4.translate(world, world, instance.position)
   if (instance.rotate) {
     mat4.rotate(world, world, instance.rotate[0], [1, 0, 0])
     mat4.rotate(world, world, instance.rotate[1], [0, 1, 0])
     mat4.rotate(world, world, instance.rotate[2], [0, 0, 1])
+  }
+  if (instance.scale) {
+    mat4.scale(world, world, instance.scale)
   }
   uniforms.u_world = world
 

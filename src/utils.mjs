@@ -86,12 +86,6 @@ export async function parseModel(name, gl) {
   }
 
   for (let g of geometries) {
-    // FIX: For those OBJ files that don't have texcoord data, add dummy data
-    if (g.data.texcoord.length <= 0) {
-      console.log(`No texcoord data, found in geometry for '${name}', assigning dummy data`)
-      g.data.texcoord = [0, 0]
-    }
-
     const bufferInfo = twgl.createBufferInfoFromArrays(gl, g.data)
     model.parts.push({ bufferInfo, materialName: g.material })
   }

@@ -131,6 +131,13 @@ export function parseOBJ(text) {
     handler(parts, unparsedArgs)
   }
 
+  // FIX: For those OBJ files that don't have texcoord data
+  for (let g of geometries) {
+    if (g.data.texcoord.length <= 0) {
+      delete g.data.texcoord
+    }
+  }
+
   // Return pair of array of geometry & array of material library names
   return {
     matLibNames: materialLibs,
