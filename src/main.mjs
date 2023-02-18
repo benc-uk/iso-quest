@@ -7,20 +7,26 @@ import { fetchShaders, setOverlay, applyMaterial } from './utils.mjs'
 import { buildScene } from './scene.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
+import * as vec3 from '../lib/gl-matrix/esm/vec3.js'
 
 const FAR_CLIP = 100
-const AA_ENABLED = true
+const AA_ENABLED = false
 const ISO_SCALE = 50
 const LIGHT_COLOUR = [0.907, 0.682, 0.392]
 
-let camX = 10
+let camOffset = vec3.fromValues(-24, 0, 16)
+let camHeight = 0
+let camAngle = 0
 let lightX = 32
+let retroMode = false
 
 //
 // Start here :D
 //
 window.onload = async () => {
-  setOverlay('WebGL Isometric Game Engine')
+  setOverlay(
+    'WebGL Isometric Game Engine<br><br>Move camera: WASD<br>Camera height: Z,X<br>Camera angle: Q,E<br>Move light: 1,2<br>Toggle retro mode: R'
+  )
   const gl = document.querySelector('canvas').getContext('webgl2', { antialias: AA_ENABLED })
   let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
 
@@ -32,21 +38,59 @@ window.onload = async () => {
 
   // Add event listener for retro mode
   document.addEventListener('keydown', (event) => {
-    const keyName = event.key
-    if (keyName === 'ArrowLeft') {
-      camX -= 1
+    const keyCode = event.code
+    if (keyCode === 'KeyA') {
+      camOffset[0] -= 3
     }
 
-    if (keyName === 'ArrowRight') {
-      camX += 1
+    if (keyCode === 'KeyD') {
+      camOffset[0] += 3
     }
 
-    if (keyName === 'ArrowUp') {
-      lightX += 4
+    if (keyCode === 'KeyW') {
+      camOffset[2] -= 3
     }
 
-    if (keyName === 'ArrowDown') {
-      lightX -= 4
+    if (keyCode === 'KeyS') {
+      camOffset[2] += 3
+    }
+
+    if (keyCode === 'KeyQ') {
+      camAngle -= 0.06
+    }
+
+    if (keyCode === 'KeyE') {
+      camAngle += 0.06
+    }
+
+    if (keyCode === 'Digit1') {
+      lightX -= 1
+    }
+
+    if (keyCode === 'Digit2') {
+      lightX += 1
+    }
+
+    if (keyCode === 'KeyZ') {
+      camHeight -= 0.5
+    }
+
+    if (keyCode === 'KeyX') {
+      camHeight += 0.5
+    }
+
+    if (keyCode === 'KeyR') {
+      retroMode = !retroMode
+      if (retroMode) {
+        gl.canvas.classList.add('retro')
+        gl.canvas.width = 1200 / 6
+        gl.canvas.height = 900 / 6
+      } else {
+        gl.canvas.classList.remove('retro')
+        gl.canvas.width = 1200
+        gl.canvas.height = 900
+      }
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
     }
   })
 
@@ -80,7 +124,14 @@ window.onload = async () => {
 
   // Draw the scene repeatedly every frame
   async function render(now) {
-    const camera = mat4.targetTo(mat4.create(), [camX, 8, 10], [0, 0, 0], [0, 1, 0])
+    // Handle camera movement & rotation
+    const camTarget = vec3.fromValues(0, 0, 0)
+    const camPos = vec3.fromValues(10, 8 + camHeight, 10)
+    vec3.rotateY(camPos, camPos, camTarget, camAngle)
+    vec3.add(camPos, camPos, camOffset)
+    vec3.add(camTarget, camTarget, camOffset)
+
+    const camera = mat4.targetTo(mat4.create(), camPos, camTarget, [0, 1, 0])
     const view = mat4.invert(mat4.create(), camera)
     worldUniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
 

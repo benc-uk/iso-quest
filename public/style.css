@@ -16,6 +16,12 @@ canvas {
   background-color: rgb(26, 24, 24);
 }
 
+.retro {
+  width: 1200px;
+  height: 900px;
+  image-rendering: pixelated;
+}
+
 #overlay {
   position: absolute;
   left: 10px;

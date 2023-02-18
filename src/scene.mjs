@@ -14,14 +14,17 @@ export async function buildScene(gl) {
   instances.push({ position: [0, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
   instances.push({ position: [-16, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
   // instances.push({ position: [-32, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
-  instances.push({ position: [-48, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
+  instances.push({ position: [-48.01, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
   instances.push({ position: [16, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
   instances.push({ position: [32, 0, 6], model: models['block'], scale: [1, 1, 0.5] })
 
   instances.push({ position: [-64 + 6, 0, 16], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
   instances.push({ position: [-64 + 6, 0, 32], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
+  instances.push({ position: [-64 + 6, 0, 48], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
   instances.push({ position: [-48 + 6, 0, -0.01], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
   instances.push({ position: [-48 + 6, 0, -16], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
+  instances.push({ position: [-32 + 10, 0, -0.1], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
+  instances.push({ position: [-32 + 10, 0, -16], model: models['block'], scale: [1, 1, 0.5], rotate: [0, DEG_90, 0] })
 
   instances.push({ position: [0, -9, 16], model: models['floor'], rotate: [DEG_90, 0, 0] })
   instances.push({ position: [16, -9, 16], model: models['floor'], rotate: [DEG_90, 0, 0] })
@@ -36,6 +39,13 @@ export async function buildScene(gl) {
   instances.push({ position: [-16, -9, 32], model: models['floor'], rotate: [DEG_90, 0, 0] })
   instances.push({ position: [-32, -9, 32], model: models['floor'], rotate: [DEG_90, 0, 0] })
   instances.push({ position: [-48, -9, 32], model: models['floor'], rotate: [DEG_90, 0, 0] })
+
+  instances.push({ position: [0, -9, 48], model: models['floor'], rotate: [DEG_90, 0, 0] })
+  instances.push({ position: [16, -9, 48], model: models['floor'], rotate: [DEG_90, 0, 0] })
+  instances.push({ position: [32, -9, 48], model: models['floor'], rotate: [DEG_90, 0, 0] })
+  instances.push({ position: [-16, -9, 48], model: models['floor'], rotate: [DEG_90, 0, 0] })
+  instances.push({ position: [-32, -9, 48], model: models['floor'], rotate: [DEG_90, 0, 0] })
+  instances.push({ position: [-48, -9, 48], model: models['floor'], rotate: [DEG_90, 0, 0] })
 
   instances.push({ position: [-32, -9, 0], model: models['floor'], rotate: [DEG_90, 0, 0] })
   instances.push({ position: [-32, -9, -16], model: models['floor'], rotate: [DEG_90, 0, 0] })
