@@ -9,7 +9,7 @@ import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 import * as vec3 from '../lib/gl-matrix/esm/vec3.js'
 
-const FAR_CLIP = 100
+const FAR_CLIP = 300
 const AA_ENABLED = false
 const ISO_SCALE = 50
 const LIGHT_COLOUR = [0.907, 0.682, 0.392]
