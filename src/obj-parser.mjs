@@ -1,91 +1,112 @@
-let objPositions = [[0, 0, 0]]
-let objTexcoords = [[0, 0]]
-let objNormals = [[0, 0, 0]]
+// ===== obj-parser.mjs ==========================================================
+// A simple OBJ parser, works well, but FAR from comprehensive
+// Taken from https://webglfundamentals.org/webgl/lessons/webgl-obj-loader.html
+// Ben Coleman, 2023
+// ===============================================================================
 
-// same order as `f` indices
-let objVertexData = [objPositions, objTexcoords, objNormals]
-
-// same order as `f` indices
-let webglVertexData = [
-  [], // positions
-  [], // texcoords
-  [], // normals
-]
-
-let geometries = []
-let geometry
-let material = 'default'
-let materialLibs = []
-
-const keywords = {
-  v(parts) {
-    objPositions.push(parts.map(parseFloat))
-  },
-
-  vn(parts) {
-    objNormals.push(parts.map(parseFloat))
-  },
-
-  vt(parts) {
-    objTexcoords.push(parts.map(parseFloat))
-  },
-
-  f(parts) {
-    setGeometry()
-    const numTriangles = parts.length - 2
-    for (let tri = 0; tri < numTriangles; ++tri) {
-      addVertex(parts[0])
-      addVertex(parts[tri + 1])
-      addVertex(parts[tri + 2])
-    }
-  },
-
-  usemtl(_, unparsedArgs) {
-    material = unparsedArgs
-    newGeometry()
-  },
-
-  mtllib(_, unparsedArgs) {
-    materialLibs.push(unparsedArgs)
-  },
-}
-
-function addVertex(vert) {
-  const ptn = vert.split('/')
-  ptn.forEach((objIndexStr, i) => {
-    if (!objIndexStr) {
-      return
-    }
-
-    const objIndex = parseInt(objIndexStr)
-    const index = objIndex + (objIndex >= 0 ? 0 : objVertexData[i].length)
-
-    webglVertexData[i].push(...objVertexData[i][index])
-  })
-}
+const keywordRE = /(\w*)(?: )*(.*)/
 
 export function parseOBJ(text) {
-  objPositions = [[0, 0, 0]]
-  objTexcoords = [[0, 0]]
-  objNormals = [[0, 0, 0]]
+  const lines = text.split('\n')
+
+  const objPositions = [[0, 0, 0]]
+  const objTexcoords = [[0, 0]]
+  const objNormals = [[0, 0, 0]]
 
   // same order as `f` indices
-  objVertexData = [objPositions, objTexcoords, objNormals]
+  const objVertexData = [objPositions, objTexcoords, objNormals]
 
   // same order as `f` indices
-  webglVertexData = [
+  let webglVertexData = [
     [], // positions
     [], // texcoords
     [], // normals
   ]
 
-  geometries = []
-  geometry = null
-  material = 'default'
-  materialLibs = []
+  const geometries = []
+  let geometry = null
+  let material = '__default'
+  const materialLibs = []
 
-  const keywordRE = /(\w*)(?: )*(.*)/
-  const lines = text.split('\n')
+  const keywords = {
+    v(parts) {
+      objPositions.push(parts.map(parseFloat))
+    },
+
+    vn(parts) {
+      objNormals.push(parts.map(parseFloat))
+    },
+
+    vt(parts) {
+      objTexcoords.push(parts.map(parseFloat))
+    },
+
+    f(parts) {
+      setGeometry()
+      const numTriangles = parts.length - 2
+      for (let tri = 0; tri < numTriangles; ++tri) {
+        addVertex(parts[0])
+        addVertex(parts[tri + 1])
+        addVertex(parts[tri + 2])
+      }
+    },
+
+    usemtl(_, unparsedArgs) {
+      material = unparsedArgs
+      newGeometry()
+    },
+
+    mtllib(_, unparsedArgs) {
+      materialLibs.push(unparsedArgs)
+    },
+
+    // Not used, but suppress warnings
+    s(_, blah) {},
+    o(_, blah) {},
+  }
+
+  function addVertex(vert) {
+    const ptn = vert.split('/')
+
+    ptn.forEach((objIndexStr, i) => {
+      if (!objIndexStr) {
+        return
+      }
+
+      const objIndex = parseInt(objIndexStr)
+      const index = objIndex + (objIndex >= 0 ? 0 : objVertexData[i].length)
+
+      webglVertexData[i].push(...objVertexData[i][index])
+    })
+  }
+
+  function newGeometry() {
+    // If there is an existing geometry and it's not empty then start a new one.
+    if (geometry && geometry.data.position.length) {
+      geometry = undefined
+    }
+  }
+
+  function setGeometry() {
+    if (!geometry) {
+      const position = []
+      const texcoord = []
+      const normal = []
+
+      webglVertexData = [position, texcoord, normal]
+
+      geometry = {
+        material,
+        data: {
+          position,
+          texcoord,
+          normal,
+        },
+      }
+
+      geometries.push(geometry)
+    }
+  }
 
   for (let lineNo = 0; lineNo < lines.length; ++lineNo) {
     const line = lines[lineNo].trim()
@@ -110,37 +131,9 @@ export function parseOBJ(text) {
     handler(parts, unparsedArgs)
   }
 
+  // Return pair of array of geometry & array of material library names
   return {
     matLibNames: materialLibs,
     geometries: geometries,
-  }
-}
-
-function newGeometry() {
-  // If there is an existing geometry and it's
-  // not empty then start a new one.
-  if (geometry && geometry.data.position.length) {
-    geometry = undefined
-  }
-}
-
-function setGeometry() {
-  if (!geometry) {
-    const position = []
-    const texcoord = []
-    const normal = []
-
-    webglVertexData = [position, texcoord, normal]
-
-    geometry = {
-      material,
-      data: {
-        position,
-        texcoord,
-        normal,
-      },
-    }
-
-    geometries.push(geometry)
   }
 }
