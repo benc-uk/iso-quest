@@ -12,7 +12,7 @@ import { createSprite } from './sprtites.mjs'
 
 const FAR_CLIP = 300
 const AA_ENABLED = false
-const ISO_SCALE = 50
+const ISO_SCALE = 40
 const LIGHT_COLOUR = [0.907, 0.682, 0.392]
 
 const camOffset = vec3.fromValues(-24, 0, 16)
@@ -20,6 +20,8 @@ let camHeight = 0
 let camAngle = 0
 let lightX = 32
 let retroMode = false
+
+let playerPos = vec3.fromValues(0, -0.1, 32)
 
 //
 // Start here :D
@@ -81,6 +83,22 @@ window.onload = async () => {
       camHeight += 0.5
     }
 
+    if (keyCode === 'ArrowLeft') {
+      playerPos[0] -= 1
+    }
+
+    if (keyCode === 'ArrowRight') {
+      playerPos[0] += 1
+    }
+
+    if (keyCode === 'ArrowUp') {
+      playerPos[2] -= 1
+    }
+
+    if (keyCode === 'ArrowDown') {
+      playerPos[2] += 1
+    }
+
     if (keyCode === 'KeyR') {
       retroMode = !retroMode
       if (retroMode) {
@@ -117,9 +135,6 @@ window.onload = async () => {
   const scene = await buildScene(gl)
 
   const worldUniforms = {
-    u_worldInverseTranspose: mat4.create(),
-    u_worldViewProjection: mat4.create(),
-
     // Move light somewhere in the world
     u_lightWorldPos: [-8, 16, 32],
     u_lightColor: LIGHT_COLOUR,
@@ -129,7 +144,7 @@ window.onload = async () => {
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
 
-  const s = createSprite(gl)
+  const player = createSprite(gl)
 
   // Draw the scene repeatedly every frame
   async function render(_now) {
@@ -159,7 +174,8 @@ window.onload = async () => {
     }
 
     gl.useProgram(spriteProg.program)
-    renderSprite(s, gl, spriteProg, view, projection)
+    player.position = playerPos
+    renderSprite(player, gl, spriteProg, view, projection)
 
     requestAnimationFrame(render)
   }
@@ -172,6 +188,13 @@ window.onload = async () => {
 // Render a model instance
 //
 function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
+  // Uniforms for this instance
+  uniforms = {
+    ...uniforms,
+    u_worldInverseTranspose: mat4.create(),
+    u_worldViewProjection: mat4.create(),
+  }
+
   // World transform moves instance into the world
   const world = mat4.create()
   if (instance.position) mat4.translate(world, world, instance.position)
@@ -214,15 +237,17 @@ function renderSprite(sprite, gl, programInfo, view, projection) {
   }
 
   // Move sprite into the world
-  mat4.translate(uniforms.u_world, uniforms.u_world, [16, 0, 20])
+  mat4.translate(uniforms.u_world, uniforms.u_world, sprite.position)
 
   // World view before projection, intermediate step for billboarding
   const worldView = mat4.multiply(mat4.create(), view, uniforms.u_world)
 
-  // For billboarding, we need to remove the translation part of the world view matrix
+  // For billboarding
+  // https://www.geeks3d.com/20140807/billboarding-vertex-shader-glsl/
   worldView[0] = 1.0
   worldView[1] = 0
   worldView[2] = 0
+  worldView[5] = 1.0
   worldView[8] = 0
   worldView[9] = 0
   worldView[10] = 1.0

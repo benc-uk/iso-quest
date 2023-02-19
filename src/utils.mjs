@@ -62,6 +62,7 @@ export function hideOverlay() {
 export async function parseModel(name, gl) {
   // Returned model object
   const model = {
+    name,
     parts: [],
     materials: {},
   }
