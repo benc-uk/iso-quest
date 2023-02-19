@@ -8,6 +8,7 @@ import { buildScene } from './scene.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 import * as vec3 from '../lib/gl-matrix/esm/vec3.js'
+import { createSprite } from './sprtites.mjs'
 
 const FAR_CLIP = 300
 const AA_ENABLED = false
@@ -27,6 +28,7 @@ window.onload = async () => {
   setOverlay(
     'WebGL Isometric Game Engine<br><br>Move camera: WASD<br>Camera height: Z,X<br>Camera angle: Q,E<br>Move light: 1,2<br>Toggle retro mode: R'
   )
+
   const gl = document.querySelector('canvas').getContext('webgl2', { antialias: AA_ENABLED })
   const ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
 
@@ -94,16 +96,22 @@ window.onload = async () => {
     }
   })
 
-  // Load shaders from external files
-  const { vertex, fragment } = await fetchShaders('./shaders/vert.glsl', './shaders/frag.glsl')
-
-  // Use TWLG to set up the shaders and program
-  let programInfo = null
+  // Use TWLG to set up the shaders and programs
+  // We have two programs and two pairs of shaders, one for 3D elements (models) and one for sprites
+  let modelProg, spriteProg
   try {
-    programInfo = twgl.createProgramInfo(gl, [vertex, fragment])
+    // Note, we load shaders from external files, that's how I like to work
+    const { vertex: modelVert, fragment: modelFrag } = await fetchShaders('shaders/vert.glsl', 'shaders/frag.glsl')
+    modelProg = twgl.createProgramInfo(gl, [modelVert, modelFrag])
+
+    const { vertex: spriteVert, fragment: spriteFrag } = await fetchShaders('shaders/sprite-vert.glsl', 'shaders/sprite-frag.glsl')
+    spriteProg = twgl.createProgramInfo(gl, [spriteVert, spriteFrag])
+
+    console.log('🎨 Loaded all shaders, GL is ready')
   } catch (err) {
+    console.error(err)
     setOverlay(err.message)
-    return
+    return // Give up here!
   }
 
   const scene = await buildScene(gl)
@@ -120,7 +128,8 @@ window.onload = async () => {
 
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
-  gl.useProgram(programInfo.program)
+
+  const s = createSprite(gl)
 
   // Draw the scene repeatedly every frame
   async function render(_now) {
@@ -144,9 +153,13 @@ window.onload = async () => {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+    gl.useProgram(modelProg.program)
     for (const instance of scene) {
-      renderInstance(instance, gl, programInfo, worldUniforms, viewProjection)
+      renderInstance(instance, gl, modelProg, worldUniforms, viewProjection)
     }
+
+    gl.useProgram(spriteProg.program)
+    renderSprite(s, gl, spriteProg, view, projection)
 
     requestAnimationFrame(render)
   }
@@ -188,4 +201,36 @@ function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
 
     twgl.drawBufferInfo(gl, part.bufferInfo)
   }
+}
+
+//
+// Render a sprite
+//
+function renderSprite(sprite, gl, programInfo, view, projection) {
+  const uniforms = {
+    u_texture: sprite.texture,
+    u_worldViewProjection: mat4.create(),
+    u_world: mat4.create(),
+  }
+
+  // Move sprite into the world
+  mat4.translate(uniforms.u_world, uniforms.u_world, [16, 0, 20])
+
+  // World view before projection, intermediate step for billboarding
+  const worldView = mat4.multiply(mat4.create(), view, uniforms.u_world)
+
+  // For billboarding, we need to remove the translation part of the world view matrix
+  worldView[0] = 1.0
+  worldView[1] = 0
+  worldView[2] = 0
+  worldView[8] = 0
+  worldView[9] = 0
+  worldView[10] = 1.0
+
+  // Populate u_worldViewProjection which is pretty fundamental
+  mat4.multiply(uniforms.u_worldViewProjection, projection, worldView)
+
+  twgl.setBuffersAndAttributes(gl, programInfo, sprite.buffers)
+  twgl.setUniforms(programInfo, uniforms)
+  twgl.drawBufferInfo(gl, sprite.buffers)
 }
