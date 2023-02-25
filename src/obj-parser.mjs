@@ -17,6 +17,7 @@ export function parseOBJ(text) {
   const objVertexData = [objPositions, objTexcoords, objNormals]
 
   // same order as `f` indices
+  /** @type {any[][]} */
   let webglVertexData = [
     [], // positions
     [], // texcoords

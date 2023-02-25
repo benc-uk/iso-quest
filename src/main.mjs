@@ -3,41 +3,52 @@
 // Ben Coleman, 2023
 // ===============================================================================
 
-import { fetchShaders, setOverlay, applyMaterial } from './utils.mjs'
+import { fetchShaders, setOverlay } from './utils.mjs'
 import { buildScene } from './scene.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 import * as vec3 from '../lib/gl-matrix/esm/vec3.js'
-import { createSprite } from './sprtites.mjs'
+import { Sprite } from './sprites.mjs'
+// eslint-disable-next-line no-unused-vars
+import { Instance } from './models.mjs'
 
 const FAR_CLIP = 300
 const AA_ENABLED = false
-const ISO_SCALE = 40
+const ISO_SCALE = 50
 const LIGHT_COLOUR = [0.907, 0.682, 0.392]
 
-const camOffset = vec3.fromValues(-24, 0, 16)
+const camOffset = vec3.fromValues(32, 0, 32)
 let camHeight = 0
 let camAngle = 0
-let lightX = 32
+let lightX = 88
 let retroMode = false
 
-let playerPos = vec3.fromValues(0, -0.1, 32)
+/** @type {WebGL2RenderingContext} */
+let gl
+let ASPECT
 
-//
-// Start here :D
-//
+const playerPos = vec3.fromValues(32, -0.1, 32)
+
+// **** Start here ****
 window.onload = async () => {
   setOverlay(
     'WebGL Isometric Game Engine<br><br>Move camera: WASD<br>Camera height: Z,X<br>Camera angle: Q,E<br>Move light: 1,2<br>Toggle retro mode: R'
   )
 
-  const gl = document.querySelector('canvas').getContext('webgl2', { antialias: AA_ENABLED })
-  const ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
+  const canvas = document.querySelector('canvas')
+  if (canvas) {
+    const tempGl = canvas.getContext('webgl2', { antialias: AA_ENABLED })
 
-  // If we don't have a GL context, give up now
-  if (!gl) {
-    setOverlay('Unable to initialize WebGL. Your browser or machine may not support it!')
-    return
+    // If we don't have a GL context, give up now
+    if (!tempGl) {
+      setOverlay('Unable to initialize WebGL. Your browser or machine may not support it!')
+      return
+    } else {
+      gl = tempGl
+    }
+
+    // @ts-ignore
+    ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
   }
 
   // Add event listener for retro mode
@@ -84,28 +95,34 @@ window.onload = async () => {
     }
 
     if (keyCode === 'ArrowLeft') {
-      playerPos[0] -= 1
+      playerPos[0] -= 2
+      camOffset[0] -= 2
     }
 
     if (keyCode === 'ArrowRight') {
-      playerPos[0] += 1
+      playerPos[0] += 2
+      camOffset[0] += 2
     }
 
     if (keyCode === 'ArrowUp') {
-      playerPos[2] -= 1
+      playerPos[2] -= 2
+      camOffset[2] -= 2
     }
 
     if (keyCode === 'ArrowDown') {
-      playerPos[2] += 1
+      playerPos[2] += 2
+      camOffset[2] += 2
     }
 
     if (keyCode === 'KeyR') {
       retroMode = !retroMode
       if (retroMode) {
+        // @ts-ignore
         gl.canvas.classList.add('retro')
         gl.canvas.width = 1200 / 6
         gl.canvas.height = 900 / 6
       } else {
+        // @ts-ignore
         gl.canvas.classList.remove('retro')
         gl.canvas.width = 1200
         gl.canvas.height = 900
@@ -143,10 +160,15 @@ window.onload = async () => {
 
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-  const player = createSprite(gl)
+  const player = new Sprite(gl, 'dwarf_1')
 
-  // Draw the scene repeatedly every frame
+  /**
+   * Draw the scene repeatedly every frame
+   *
+   * @param _now - The current time in milliseconds
+   */
   async function render(_now) {
     // Handle camera movement & rotation
     const camTarget = vec3.fromValues(0, 0, 0)
@@ -168,15 +190,24 @@ window.onload = async () => {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    gl.useProgram(modelProg.program)
-    for (const instance of scene) {
-      renderInstance(instance, gl, modelProg, worldUniforms, viewProjection)
-    }
-
+    gl.disable(gl.BLEND)
     gl.useProgram(spriteProg.program)
     player.position = playerPos
     renderSprite(player, gl, spriteProg, view, projection)
 
+    gl.enable(gl.BLEND)
+
+    gl.useProgram(modelProg.program)
+    for (const instance of scene) {
+      gl.disable(gl.BLEND)
+      if (instance.transparent) {
+        gl.enable(gl.BLEND)
+      }
+
+      renderInstance(instance, gl, modelProg, worldUniforms, viewProjection)
+    }
+
+    // Render forever
     requestAnimationFrame(render)
   }
 
@@ -184,15 +215,22 @@ window.onload = async () => {
   requestAnimationFrame(render)
 }
 
-//
-// Render a model instance
-//
+/**
+ * Render a model instance
+ *
+ * @param {Instance} instance
+ * @param gl
+ * @param programInfo
+ * @param uniforms
+ * @param viewProjection
+ */
 function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
   // Uniforms for this instance
   uniforms = {
     ...uniforms,
     u_worldInverseTranspose: mat4.create(),
     u_worldViewProjection: mat4.create(),
+    u_transparency: instance.transparent ? 0.4 : 1,
   }
 
   // World transform moves instance into the world
@@ -217,7 +255,7 @@ function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
 
   const model = instance.model
   for (const part of model.parts) {
-    applyMaterial(programInfo, model.materials[part.materialName])
+    model.materials[part.materialName].apply(programInfo)
 
     twgl.setBuffersAndAttributes(gl, programInfo, part.bufferInfo)
     twgl.setUniforms(programInfo, uniforms)
@@ -229,6 +267,14 @@ function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
 //
 // Render a sprite
 //
+/**
+ *
+ * @param sprite
+ * @param gl
+ * @param programInfo
+ * @param view
+ * @param projection
+ */
 function renderSprite(sprite, gl, programInfo, view, projection) {
   const uniforms = {
     u_texture: sprite.texture,

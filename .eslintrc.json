@@ -2,10 +2,15 @@
   "root": true,
   "extends": [
       "eslint:recommended"
+      // "plugin:jsdoc/recommended"
   ],
+  // "plugins": [
+  //   "jsdoc"
+  // ],
   "env": {
     "browser": true,
-    "es2021": true
+    "es2021": true,
+    "es6": true
   },
   "parserOptions": { 
     "ecmaVersion": "latest",
@@ -15,9 +20,7 @@
     "no-var": "error",
     "prefer-const": "error",
     "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }],
-    "no-prototype-builtins": "off"
-  },
-  "globals": {
-    "earcut": "readonly"
+    "no-prototype-builtins": "off",
+    "jsdoc/require-jsdoc":  "off"
   }
 }

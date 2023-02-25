@@ -20,6 +20,7 @@ install-tools: ## 🔮 Install dev tools into project bin directory
 	@$(BS_PATH) --version > /dev/null 2>&1 || npm install --prefix ./bin browser-sync
 	@$(PR_PATH) -v > /dev/null 2>&1 || npm install --prefix ./bin prettier
 	@$(ESL_PATH) -v > /dev/null 2>&1 || npm install --prefix ./bin eslint
+	npm install --prefix ./bin eslint-plugin-jsdoc@latest 
 
 lint: ## 🌟 Lint & format check only, sets exit code on error
 	@figlet $@ || true

@@ -15,25 +15,25 @@ export function parseMTL(text) {
     },
 
     Ns(parts) {
-      material.shininess = parseFloat(parts[0])
+      material.ns = parseFloat(parts[0])
     },
     Ka(parts) {
-      material.ambient = parts.map(parseFloat)
+      material.ka = parts.map(parseFloat)
     },
     Kd(parts) {
-      material.diffuse = parts.map(parseFloat)
+      material.kd = parts.map(parseFloat)
     },
     Ks(parts) {
-      material.specular = parts.map(parseFloat)
+      material.ks = parts.map(parseFloat)
     },
     Ke(parts) {
-      material.emissive = parts.map(parseFloat)
+      material.ke = parts.map(parseFloat)
     },
     Ni(parts) {
-      material.opticalDensity = parseFloat(parts[0])
+      material.ni = parseFloat(parts[0])
     },
     d(parts) {
-      material.opacity = parseFloat(parts[0])
+      material.d = parseFloat(parts[0])
     },
     illum(parts) {
       material.illum = parseInt(parts[0])
