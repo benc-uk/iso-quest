@@ -1,5 +1,6 @@
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
+import { getGl } from './utils.mjs'
 
 const SIZE = 14
 
@@ -9,14 +10,15 @@ const SIZE = 14
 export class Sprite {
   /** @type {string} */
   name = ''
-  /** @type {twgl.BufferInfo} */
+  /** @type {any} */
   buffers
   /** @type {WebGLTexture} */
   texture
   /** @type {[number, number, number]} */
   position = [0, 0, 0]
 
-  constructor(gl, name) {
+  constructor(name) {
+    const gl = getGl()
     const spriteTransform = mat4.create()
     mat4.rotateX(spriteTransform, spriteTransform, Math.PI / 2)
     this.buffers = twgl.primitives.createPlaneBufferInfo(gl, SIZE, SIZE, 2, 2, spriteTransform)

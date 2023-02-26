@@ -25,7 +25,7 @@ install-tools: ## 🔮 Install dev tools into project bin directory
 lint: ## 🌟 Lint & format check only, sets exit code on error
 	@figlet $@ || true
 	@$(PR_PATH) $(SRC_DIR) --check
-	@$(ESL_PATH) $(SRC_DIR)/**
+	@$(ESL_PATH) --resolve-plugins-relative-to ./bin $(SRC_DIR)/**
 
 lint-fix: ## 📝 Lint & format, attempts to fix errors & modify code
 	@figlet $@ || true

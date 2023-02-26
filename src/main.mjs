@@ -3,133 +3,58 @@
 // Ben Coleman, 2023
 // ===============================================================================
 
-import { fetchShaders, setOverlay } from './utils.mjs'
+import { fetchShaders, getGl, setOverlay } from './utils.mjs'
 import { buildScene } from './scene.mjs'
 import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 import * as vec3 from '../lib/gl-matrix/esm/vec3.js'
 import { Sprite } from './sprites.mjs'
-// eslint-disable-next-line no-unused-vars
 import { Instance } from './models.mjs'
+import { Player } from './player.mjs'
+import { bindControls } from './control.mjs'
 
 const FAR_CLIP = 300
-const AA_ENABLED = false
-const ISO_SCALE = 50
-const LIGHT_COLOUR = [0.907, 0.682, 0.392]
+const AA_ENABLED = true
+const LIGHT_COLOUR = [0.997, 0.682, 0.392]
+const BUILD_VER = '0001'
 
-const camOffset = vec3.fromValues(32, 0, 32)
-let camHeight = 0
-let camAngle = 0
-let lightX = 88
-let retroMode = false
+/**
+ * @typedef {Object} cameraParam
+ * @property {number} angle Used to rotate the camera
+ * @property {number} height Used to move the camera up and down
+ * @property {number} zoom Used to set the viewport size
+ */
+const cameraParam = {
+  angle: 0,
+  height: 0,
+  zoom: 50,
+}
+const retroMode = false
 
 /** @type {WebGL2RenderingContext} */
 let gl
-let ASPECT
-
-const playerPos = vec3.fromValues(32, -0.1, 32)
 
 // **** Start here ****
 window.onload = async () => {
   setOverlay(
-    'WebGL Isometric Game Engine<br><br>Move camera: WASD<br>Camera height: Z,X<br>Camera angle: Q,E<br>Move light: 1,2<br>Toggle retro mode: R'
+    'WebGL Isometric Game Engine<br><br>Move player: cursor keys<br>Camera height: Z,X<br>Camera angle: Q,E<br>Zoom: +,=<br>Toggle retro mode: R<br><br>Build: ' +
+      BUILD_VER
   )
 
-  const canvas = document.querySelector('canvas')
-  if (canvas) {
-    const tempGl = canvas.getContext('webgl2', { antialias: AA_ENABLED })
-
-    // If we don't have a GL context, give up now
-    if (!tempGl) {
-      setOverlay('Unable to initialize WebGL. Your browser or machine may not support it!')
-      return
-    } else {
-      gl = tempGl
-    }
-
-    // @ts-ignore
-    ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
+  gl = getGl(AA_ENABLED)
+  // If we don't have a GL context, give up now
+  if (!gl) {
+    setOverlay('Unable to initialize WebGL. Your browser or machine may not support it!')
+    return
   }
 
-  // Add event listener for retro mode
-  document.addEventListener('keydown', (event) => {
-    const keyCode = event.code
-    if (keyCode === 'KeyA') {
-      camOffset[0] -= 3
-    }
+  // @ts-ignore
+  const ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
 
-    if (keyCode === 'KeyD') {
-      camOffset[0] += 3
-    }
+  const player = new Player()
 
-    if (keyCode === 'KeyW') {
-      camOffset[2] -= 3
-    }
-
-    if (keyCode === 'KeyS') {
-      camOffset[2] += 3
-    }
-
-    if (keyCode === 'KeyQ') {
-      camAngle -= 0.06
-    }
-
-    if (keyCode === 'KeyE') {
-      camAngle += 0.06
-    }
-
-    if (keyCode === 'Digit1') {
-      lightX -= 1
-    }
-
-    if (keyCode === 'Digit2') {
-      lightX += 1
-    }
-
-    if (keyCode === 'KeyZ') {
-      camHeight -= 0.5
-    }
-
-    if (keyCode === 'KeyX') {
-      camHeight += 0.5
-    }
-
-    if (keyCode === 'ArrowLeft') {
-      playerPos[0] -= 2
-      camOffset[0] -= 2
-    }
-
-    if (keyCode === 'ArrowRight') {
-      playerPos[0] += 2
-      camOffset[0] += 2
-    }
-
-    if (keyCode === 'ArrowUp') {
-      playerPos[2] -= 2
-      camOffset[2] -= 2
-    }
-
-    if (keyCode === 'ArrowDown') {
-      playerPos[2] += 2
-      camOffset[2] += 2
-    }
-
-    if (keyCode === 'KeyR') {
-      retroMode = !retroMode
-      if (retroMode) {
-        // @ts-ignore
-        gl.canvas.classList.add('retro')
-        gl.canvas.width = 1200 / 6
-        gl.canvas.height = 900 / 6
-      } else {
-        // @ts-ignore
-        gl.canvas.classList.remove('retro')
-        gl.canvas.width = 1200
-        gl.canvas.height = 900
-      }
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-    }
-  })
+  // Bind keyboard controls
+  bindControls(player, cameraParam, retroMode)
 
   // Use TWLG to set up the shaders and programs
   // We have two programs and two pairs of shaders, one for 3D elements (models) and one for sprites
@@ -152,8 +77,7 @@ window.onload = async () => {
   const scene = await buildScene(gl)
 
   const worldUniforms = {
-    // Move light somewhere in the world
-    u_lightWorldPos: [-8, 16, 32],
+    u_lightWorldPos: [0, 0, 0], // Updated in render loop
     u_lightColor: LIGHT_COLOUR,
     u_lightAmbient: [0.1, 0.1, 0.1],
   }
@@ -161,8 +85,6 @@ window.onload = async () => {
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-  const player = new Sprite(gl, 'dwarf_1')
 
   /**
    * Draw the scene repeatedly every frame
@@ -172,28 +94,35 @@ window.onload = async () => {
   async function render(_now) {
     // Handle camera movement & rotation
     const camTarget = vec3.fromValues(0, 0, 0)
-    const camPos = vec3.fromValues(10, 8 + camHeight, 10)
-    vec3.rotateY(camPos, camPos, camTarget, camAngle)
-    vec3.add(camPos, camPos, camOffset)
-    vec3.add(camTarget, camTarget, camOffset)
+    const camPos = vec3.fromValues(10, 8 + cameraParam.height, 10)
+    vec3.rotateY(camPos, camPos, camTarget, cameraParam.angle)
+    vec3.add(camPos, camPos, player.position)
+    vec3.add(camTarget, camTarget, player.position)
 
     const camera = mat4.targetTo(mat4.create(), camPos, camTarget, [0, 1, 0])
     const view = mat4.invert(mat4.create(), camera)
     worldUniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
 
-    // Move the light
-    worldUniforms.u_lightWorldPos[0] = lightX
+    // Move the light to the player position
+    worldUniforms.u_lightWorldPos = [player.position[0], player.position[1] + 8, player.position[2]]
 
     // An isometric projection
-    const projection = mat4.ortho(mat4.create(), -ASPECT * ISO_SCALE, ASPECT * ISO_SCALE, -ISO_SCALE, ISO_SCALE, -FAR_CLIP, FAR_CLIP)
+    const projection = mat4.ortho(
+      mat4.create(),
+      -ASPECT * cameraParam.zoom,
+      ASPECT * cameraParam.zoom,
+      -cameraParam.zoom,
+      cameraParam.zoom,
+      -FAR_CLIP,
+      FAR_CLIP
+    )
     const viewProjection = mat4.multiply(mat4.create(), projection, view)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     gl.disable(gl.BLEND)
     gl.useProgram(spriteProg.program)
-    player.position = playerPos
-    renderSprite(player, gl, spriteProg, view, projection)
+    renderSprite(player.sprite, spriteProg, view, projection)
 
     gl.enable(gl.BLEND)
 
@@ -204,7 +133,7 @@ window.onload = async () => {
         gl.enable(gl.BLEND)
       }
 
-      renderInstance(instance, gl, modelProg, worldUniforms, viewProjection)
+      renderInstance(instance, modelProg, worldUniforms, viewProjection)
     }
 
     // Render forever
@@ -224,7 +153,7 @@ window.onload = async () => {
  * @param uniforms
  * @param viewProjection
  */
-function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
+function renderInstance(instance, programInfo, uniforms, viewProjection) {
   // Uniforms for this instance
   uniforms = {
     ...uniforms,
@@ -269,13 +198,13 @@ function renderInstance(instance, gl, programInfo, uniforms, viewProjection) {
 //
 /**
  *
- * @param sprite
+ * @param {Sprite} sprite
  * @param gl
  * @param programInfo
  * @param view
  * @param projection
  */
-function renderSprite(sprite, gl, programInfo, view, projection) {
+function renderSprite(sprite, programInfo, view, projection) {
   const uniforms = {
     u_texture: sprite.texture,
     u_worldViewProjection: mat4.create(),

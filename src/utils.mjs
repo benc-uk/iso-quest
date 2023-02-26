@@ -52,3 +52,27 @@ export function hideOverlay() {
   if (!overlay) return
   overlay.style.display = 'none'
 }
+
+/**
+ * Single global WebGL2 context, use getGl() to access it
+ * @type {WebGL2RenderingContext} */
+let gl
+
+/** @returns {WebGL2RenderingContext} */
+export function getGl(aa = true, selector = 'canvas') {
+  if (gl) {
+    return gl
+  }
+
+  console.log('🖌️ Creating WebGL2 context')
+
+  const canvas = document.querySelector(selector)
+  // @ts-ignore
+  gl = canvas.getContext('webgl2', { antialias: aa })
+
+  if (!gl) {
+    console.log('💥 Unable to create WebGL2 context!')
+  }
+
+  return gl
+}

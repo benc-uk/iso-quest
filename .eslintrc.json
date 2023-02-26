@@ -4,9 +4,9 @@
       "eslint:recommended"
       // "plugin:jsdoc/recommended"
   ],
-  // "plugins": [
-  //   "jsdoc"
-  // ],
+  "plugins": [
+    "jsdoc"
+  ],
   "env": {
     "browser": true,
     "es2021": true,
@@ -21,6 +21,6 @@
     "prefer-const": "error",
     "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }],
     "no-prototype-builtins": "off",
-    "jsdoc/require-jsdoc":  "off"
+    "jsdoc/no-undefined-types": 1
   }
 }
