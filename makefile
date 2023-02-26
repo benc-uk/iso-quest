@@ -29,7 +29,7 @@ lint: ## 🌟 Lint & format check only, sets exit code on error
 
 lint-fix: ## 📝 Lint & format, attempts to fix errors & modify code
 	@figlet $@ || true
-	@$(ESL_PATH) $(SRC_DIR)/** --fix
+	@$(ESL_PATH) --resolve-plugins-relative-to ./bin $(SRC_DIR)/** --fix
 	@$(PR_PATH) $(SRC_DIR) --write
 
 local-server: ## 🌐 Start a local HTTP server for development

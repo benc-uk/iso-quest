@@ -4,12 +4,19 @@
 // Ben Coleman, 2023
 // ===============================================================================
 
-export function parseMTL(text) {
-  const materials = {}
+/**
+ * Parse an MTL file returning a map of materials
+ * Results should be passed new Material() to create a material
+ *
+ * @param {string} mtlFileString - MTL file contents
+ * @returns {Map<string, object>} - Parsed MTL data as a dictionary of materials
+ */
+export function parseMTL(mtlFileString) {
+  const materials = new Map()
   let material
 
   const keywords = {
-    newmtl(parts, unparsedArgs) {
+    newmtl(_, unparsedArgs) {
       material = {}
       materials[unparsedArgs] = material
     },
@@ -41,7 +48,7 @@ export function parseMTL(text) {
   }
 
   const keywordRE = /(\w*)(?: )*(.*)/
-  const lines = text.split('\n')
+  const lines = mtlFileString.split('\n')
 
   for (let lineNo = 0; lineNo < lines.length; ++lineNo) {
     const line = lines[lineNo].trim()

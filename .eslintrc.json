@@ -1,8 +1,8 @@
 {
   "root": true,
   "extends": [
-      "eslint:recommended"
-      // "plugin:jsdoc/recommended"
+      "eslint:recommended",
+      "plugin:jsdoc/recommended"
   ],
   "plugins": [
     "jsdoc"
@@ -20,7 +20,10 @@
     "no-var": "error",
     "prefer-const": "error",
     "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }],
-    "no-prototype-builtins": "off",
-    "jsdoc/no-undefined-types": 1
+    "no-prototype-builtins": "off"
+    // "jsdoc/no-undefined-types": "error",
+    // "jsdoc/check-types": "error",
+    // "jsdoc/check-tag-names": "error",
+    // "jsdoc/check-alignment": "error"
   }
 }

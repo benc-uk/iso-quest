@@ -4,7 +4,7 @@ export class Player {
   /** @type {Sprite} */
   sprite
 
-  /** @type {[number, number, number]} */
+  /** @type {number[]} */
   position
 
   constructor() {
@@ -13,10 +13,11 @@ export class Player {
   }
 
   /**
+   * Set the position of the player
    *
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
+   * @param {number} x - x position
+   * @param {number} y - y position
+   * @param {number} z - z position
    */
   setPosition(x, y, z) {
     this.position = [x, y, z]

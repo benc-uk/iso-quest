@@ -19,7 +19,7 @@ const LIGHT_COLOUR = [0.997, 0.682, 0.392]
 const BUILD_VER = '0001'
 
 /**
- * @typedef {Object} cameraParam
+ * @typedef {object} cameraParam
  * @property {number} angle Used to rotate the camera
  * @property {number} height Used to move the camera up and down
  * @property {number} zoom Used to set the viewport size
@@ -74,7 +74,7 @@ window.onload = async () => {
     return // Give up here!
   }
 
-  const scene = await buildScene(gl)
+  const scene = await buildScene()
 
   const worldUniforms = {
     u_lightWorldPos: [0, 0, 0], // Updated in render loop
@@ -89,7 +89,7 @@ window.onload = async () => {
   /**
    * Draw the scene repeatedly every frame
    *
-   * @param _now - The current time in milliseconds
+   * @param {number} _now - The DOMHighResTimeStamp from requestAnimationFrame
    */
   async function render(_now) {
     // Handle camera movement & rotation
@@ -147,11 +147,10 @@ window.onload = async () => {
 /**
  * Render a model instance
  *
- * @param {Instance} instance
- * @param gl
- * @param programInfo
- * @param uniforms
- * @param viewProjection
+ * @param {Instance} instance - The instance to render
+ * @param {twgl.ProgramInfo|any} programInfo - The GL program to use
+ * @param {object} uniforms - The uniforms to use when rendering
+ * @param {mat4} viewProjection - The combined view projection matrix
  */
 function renderInstance(instance, programInfo, uniforms, viewProjection) {
   // Uniforms for this instance
@@ -193,16 +192,13 @@ function renderInstance(instance, programInfo, uniforms, viewProjection) {
   }
 }
 
-//
-// Render a sprite
-//
 /**
+ * Render a sprite
  *
- * @param {Sprite} sprite
- * @param gl
- * @param programInfo
- * @param view
- * @param projection
+ * @param {Sprite} sprite - The sprite to render
+ * @param {twgl.ProgramInfo|any} programInfo - The GL program to use
+ * @param {mat4} view - The view matrix, Note. not combined with projection
+ * @param {mat4} projection - The projection matrix, Note. not combined with view
  */
 function renderSprite(sprite, programInfo, view, projection) {
   const uniforms = {

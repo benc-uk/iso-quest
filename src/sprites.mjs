@@ -14,7 +14,7 @@ export class Sprite {
   buffers
   /** @type {WebGLTexture} */
   texture
-  /** @type {[number, number, number]} */
+  /** @type {number[]} */
   position = [0, 0, 0]
 
   constructor(name) {

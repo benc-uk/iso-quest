@@ -6,8 +6,29 @@
 
 const keywordRE = /(\w*)(?: )*(.*)/
 
-export function parseOBJ(text) {
-  const lines = text.split('\n')
+/**
+ * @typedef {object} ObjData
+ * @property {string[]} matLibNames - List of material library names
+ * @property {Geometry[]} geometries - List of geometries
+ */
+
+/**
+ * @typedef {object} Geometry
+ * @property {string} material - Material name
+ * @property {any[]} data - Parsed geometry data
+ * @property {number[]} data.positions - List of vertex positions
+ * @property {number[]} data.texcoords - List of vertex texture coordinates
+ * @property {number[]} data.normals - List of vertex normals
+ */
+
+/**
+ * Parse an OBJ file returning a list of geometries and materials libs
+ *
+ * @param {string} objFileString - OBJ file contents
+ * @returns {ObjData} - Parsed OBJ data
+ */
+export function parseOBJ(objFileString) {
+  const lines = objFileString.split('\n')
 
   const objPositions = [[0, 0, 0]]
   const objTexcoords = [[0, 0]]
@@ -66,6 +87,11 @@ export function parseOBJ(text) {
     o(_, _blah) {},
   }
 
+  /**
+   * Updates webglVertexData per vertex
+   *
+   * @param {string} vert - String in the form of "v/vt/vn" as per OBJ spec
+   */
   function addVertex(vert) {
     const ptn = vert.split('/')
 
@@ -81,6 +107,9 @@ export function parseOBJ(text) {
     })
   }
 
+  /**
+   *
+   */
   function newGeometry() {
     // If there is an existing geometry and it's not empty then start a new one.
     if (geometry && geometry.data.position.length) {
@@ -88,6 +117,9 @@ export function parseOBJ(text) {
     }
   }
 
+  /**
+   *
+   */
   function setGeometry() {
     if (!geometry) {
       const position = []
@@ -96,6 +128,7 @@ export function parseOBJ(text) {
 
       webglVertexData = [position, texcoord, normal]
 
+      /** @type {Geometry} */
       geometry = {
         material,
         data: {

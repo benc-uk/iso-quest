@@ -5,10 +5,10 @@ import { Room } from './room.mjs'
 
 /**
  * Temporary scene builder
- * @param {WebGL2RenderingContext} gl
- * @returns {Promise<Instance[]>}
+ *
+ * @returns {Promise<Instance[]>} - List of scene instances
  */
-export async function buildScene(gl) {
+export async function buildScene() {
   /** @type {Map<string, Model>} */
   const models = new Map()
   /** @type {Instance[]} */
@@ -17,10 +17,10 @@ export async function buildScene(gl) {
   const r = new Room(3, 3)
 
   // Create scene
-  addModel('floor', models, gl)
-  addModel('block', models, gl)
-  addModel('table', models, gl)
-  addModel('chest', models, gl)
+  addModel('floor', models)
+  addModel('block', models)
+  addModel('table', models)
+  addModel('chest', models)
 
   instances.push(...r.buildInstances(models))
 
@@ -43,7 +43,13 @@ export async function buildScene(gl) {
   return instances
 }
 
-function addModel(name, models, gl) {
-  models[name] = new Model(name, gl)
-  return models[name].parse()
+/**
+ * Helper function to add a model to the cache
+ *
+ * @param {string} name - Name of the model
+ * @param {Map<string, Model>} models - Model cache
+ */
+function addModel(name, models) {
+  models[name] = new Model(name)
+  models[name].parse()
 }

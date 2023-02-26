@@ -11,14 +11,14 @@ const FLOOR = 1
  * @class Room
  */
 export class Room {
-  /** @type {number[][]} */
+  /**  @type {number[][]} */
   cells = []
   /** @type {number} */
 
   /**
    * Creates an instance of Room.
    *
-   * @param {number} width - Width of room in tiles
+   *  @param   {number} width - Width of room in tiles
    * @param {number} height - Height of room in tiles
    */
   constructor(width, height) {
@@ -40,7 +40,6 @@ export class Room {
         this.cells[x][y] = FLOOR
       }
     }
-    console.log(this.cells)
 
     this.cells[4][0] = FLOOR
     this.cells[3][0] = FLOOR
@@ -63,8 +62,9 @@ export class Room {
 
   /**
    * Creates instances of the models needed to render the room
-   * @param {Map<string, Model>} models
-   * @returns {Instance[]}
+   *
+   * @param {Map<string, Model>} models - Model cache
+   * @returns {Instance[]} - List of instances that make up the room
    */
   buildInstances(models) {
     /** @type {Instance[]} */

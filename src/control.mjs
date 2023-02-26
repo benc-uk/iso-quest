@@ -3,9 +3,10 @@ import { getGl } from './utils.mjs'
 
 /**
  * bindControls sets up the event listeners for the controls
- * @param {Player} player
- * @param {Object} cameraParam
- * @param {boolean} retroMode
+ *
+ * @param {Player} player - The player object
+ * @param {object} cameraParam - The camera parameters
+ * @param {boolean} retroMode - Whether to use retro mode
  */
 export function bindControls(player, cameraParam, retroMode) {
   document.addEventListener('keydown', (event) => {

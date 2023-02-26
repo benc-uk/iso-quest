@@ -1,11 +1,43 @@
 // ===== utils.mjs ===============================================================
-// A collection of helper functions, most were replaced with twgl
+// A collection of helper functions
 // Ben Coleman, 2023
 // ===============================================================================
 
-//
-// Load shader sources from external files using fetch, return both sources as strings
-//
+/** @type {WebGL2RenderingContext} A shared global singleton WebGL2 context */
+let glContext
+
+/**
+ * Get the WebGL2 context, if it doesn't exist create it
+ *
+ * @returns {WebGL2RenderingContext} - Global WebGL2 context
+ * @param {boolean} aa - Enable antialiasing
+ * @param {string} selector - CSS selector for locating the canvas element
+ */
+export function getGl(aa = true, selector = 'canvas') {
+  if (glContext) {
+    return glContext
+  }
+
+  console.log('🖌️ Creating WebGL2 context')
+
+  const canvas = document.querySelector(selector)
+  // @ts-ignore
+  glContext = canvas.getContext('webgl2', { antialias: aa })
+
+  if (!glContext) {
+    console.log('💥 Unable to create WebGL2 context!')
+  }
+
+  return glContext
+}
+
+/**
+ * Fetch a pair of shaders from the server
+ *
+ * @param {string} vertPath - URL path to vertex shader
+ * @param {string} fragPath - URL path to fragment shader
+ * @returns {Promise<{vertex: string, fragment: string}>} - Shaders as strings
+ */
 export async function fetchShaders(vertPath, fragPath) {
   const vsResp = await fetch(vertPath)
   const fsResp = await fetch(fragPath)
@@ -37,9 +69,11 @@ export async function fetchFile(path) {
   return text
 }
 
-//
-// Helper to show text on the screen
-//
+/**
+ * Set the overlay text, used for showing messages
+ *
+ * @param {string} message - Text to display
+ */
 export function setOverlay(message) {
   const overlay = document.getElementById('overlay')
   if (!overlay) return
@@ -47,32 +81,11 @@ export function setOverlay(message) {
   overlay.innerHTML = message
 }
 
+/**
+ * Hide the overlay
+ */
 export function hideOverlay() {
   const overlay = document.getElementById('overlay')
   if (!overlay) return
   overlay.style.display = 'none'
-}
-
-/**
- * Single global WebGL2 context, use getGl() to access it
- * @type {WebGL2RenderingContext} */
-let gl
-
-/** @returns {WebGL2RenderingContext} */
-export function getGl(aa = true, selector = 'canvas') {
-  if (gl) {
-    return gl
-  }
-
-  console.log('🖌️ Creating WebGL2 context')
-
-  const canvas = document.querySelector(selector)
-  // @ts-ignore
-  gl = canvas.getContext('webgl2', { antialias: aa })
-
-  if (!gl) {
-    console.log('💥 Unable to create WebGL2 context!')
-  }
-
-  return gl
 }
