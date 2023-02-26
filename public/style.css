@@ -8,11 +8,6 @@ html {
 
 canvas {
   display: block;
-  /* width: 100vw;
-  height: 100vh; */
-  /* width: 1280px;
-  height: 960px;
-  image-rendering: pixelated; */
   margin: 0 auto;
   background-color: rgb(26, 24, 24);
 }
@@ -29,45 +24,9 @@ canvas {
   top: 10px;
   color: rgb(255, 255, 255);
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   padding: 0.6rem;
-  background-color: rgba(50, 50, 50, 0.7);
+  background-color: rgba(50, 50, 60, 0.7);
   border-radius: 5px;
-}
-
-#controls {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  color: rgb(255, 255, 255);
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-  font-size: 1.5rem;
-  padding: 0.6rem;
-  background-color: rgba(50, 50, 50, 0.7);
-  border-radius: 5px;
-}
-
-.relative-container {
-  position: relative;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-video {
-  display: none;
-}
-
-label {
-  color: rgb(19, 189, 219);
-}
-
-input[type='range'] {
-  margin: 0.5rem 0rem 2rem 0rem;
-  display: block;
-  width: 10rem;
+  box-shadow: 0 8px 10px rgba(0, 0, 0, 0.7);
 }
