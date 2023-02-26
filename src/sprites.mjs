@@ -10,7 +10,7 @@ const SIZE = 14
 export class Sprite {
   /** @type {string} */
   name = ''
-  /** @type {aany} */
+  /** @type {any} */
   buffers
   /** @type {WebGLTexture} */
   texture
