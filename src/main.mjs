@@ -12,12 +12,12 @@ import { Sprite } from './sprites.mjs'
 import { Instance } from './models.mjs'
 import { Player } from './player.mjs'
 import { bindControls } from './control.mjs'
-import { Exit, Zone } from './zone.mjs'
+import { Zone } from './zone.mjs'
 
 const FAR_CLIP = 300
 const AA_ENABLED = true
 const LIGHT_COLOUR = [1, 0.9, 0.85] //[0.997, 0.682, 0.392]
-const BUILD_VER = '0001'
+const BUILD_VER = '0002'
 
 /**
  * @typedef {object} cameraParam

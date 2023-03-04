@@ -11,7 +11,7 @@ export class Player {
   /** @type {Zone} */
   zone
 
-  /** @type {function} */
+  /** @type {Function} */
   zoneChangeCallback
 
   constructor() {
@@ -21,6 +21,7 @@ export class Player {
 
   /**
    * Move the player to a new zone
+   *
    * @param {Zone} zone - Zone to move to
    */
   setZone(zone) {

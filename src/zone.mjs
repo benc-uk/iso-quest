@@ -2,9 +2,9 @@ import { DEG_90 } from './consts.mjs'
 import { Instance, Model } from './models.mjs'
 
 const ROOM_SIZE = 16
-const FLOOR = 1
-const WALL = 0
-const EXIT = 2
+// const FLOOR = 1
+// const WALL = 0
+// const EXIT = 2
 
 /**
  * Zone holds the playing area & tiles the player is currently in
