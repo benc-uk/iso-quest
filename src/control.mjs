@@ -1,6 +1,8 @@
 import { Player } from './player.mjs'
 import { getGl } from './utils.mjs'
 
+const MOVE_SPEED = 4
+
 /**
  * bindControls sets up the event listeners for the controls
  *
@@ -36,19 +38,21 @@ export function bindControls(player, cameraParam, retroMode) {
     }
 
     if (keyCode === 'ArrowLeft') {
-      player.setPosition((player.position[0] -= 2), player.position[1], player.position[2])
+      // player.setPosition((player.position[0] -= 2), player.position[1], player.position[2])
+      player.move(-MOVE_SPEED, 0)
     }
 
     if (keyCode === 'ArrowRight') {
-      player.setPosition((player.position[0] += 2), player.position[1], player.position[2])
+      //player.setPosition((player.position[0] += 2), player.position[1], player.position[2])
+      player.move(MOVE_SPEED, 0)
     }
 
     if (keyCode === 'ArrowUp') {
-      player.setPosition(player.position[0], player.position[1], (player.position[2] -= 2))
+      player.move(0, -MOVE_SPEED)
     }
 
     if (keyCode === 'ArrowDown') {
-      player.setPosition(player.position[0], player.position[1], (player.position[2] += 2))
+      player.move(0, MOVE_SPEED)
     }
 
     if (keyCode === 'KeyR') {

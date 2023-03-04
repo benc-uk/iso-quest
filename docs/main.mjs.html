@@ -1,4 +1,32 @@
-// ===== main.mjs ==========================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: main.mjs</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: main.mjs</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ===== main.mjs ==========================================================
 // Core engine loop
 // Ben Coleman, 2023
 // ===============================================================================
@@ -12,7 +40,7 @@ import { Sprite } from './sprites.mjs'
 import { Instance } from './models.mjs'
 import { Player } from './player.mjs'
 import { bindControls } from './control.mjs'
-import { Exit, Zone } from './zone.mjs'
+import { Zone } from './zone.mjs'
 
 const FAR_CLIP = 300
 const AA_ENABLED = true
@@ -35,12 +63,10 @@ const retroMode = false
 /** @type {WebGL2RenderingContext} */
 let gl
 
-let zoneInstances = []
-
 // **** Start here ****
 window.onload = async () => {
   setOverlay(
-    'WebGL Isometric Game Engine<br><br>Move player: cursor keys<br>Camera height: Z,X<br>Camera angle: Q,E<br>Zoom: +,=<br>Toggle retro mode: R<br><br>Build: ' +
+    'WebGL Isometric Game Engine&lt;br>&lt;br>Move player: cursor keys&lt;br>Camera height: Z,X&lt;br>Camera angle: Q,E&lt;br>Zoom: +,=&lt;br>Toggle retro mode: R&lt;br>&lt;br>Build: ' +
       BUILD_VER
   )
 
@@ -78,33 +104,9 @@ window.onload = async () => {
     return // Give up here!
   }
 
-  const zone1 = new Zone(3, 4)
-  const zone2 = new Zone(5, 5)
-  zone1.tiles[0][2].setExit(zone2, 1, 4)
-  zone2.tiles[0][4].setExit(zone1, 1, 2)
-
-  zone1.tiles[5][1].floor()
-  zone1.tiles[4][1].floor()
-  zone1.tiles[3][4].floor()
-  zone1.tiles[3][5].floor()
-
-  // this.tiles[2][6].floor()
-  // this.tiles[1][6].floor()
-  // this.tiles[0][6].floor()
-  // this.tiles[3][6].floor()
-  // this.tiles[2][7].floor()
-  // this.tiles[1][7].floor()
-  // this.tiles[0][7].floor()
-  // this.tiles[3][7].floor()
-  // this.tiles[2][8].floor()
-  // this.tiles[1][8].floor()
-  // this.tiles[0][8].floor()
-  // this.tiles[3][8].floor()
-
-  player.zoneChangeCallback = async (zone) => {
-    zoneInstances = await buildScene(zone)
-  }
-  player.setZone(zone1)
+  const zone = new Zone(3, 3)
+  player.zone = zone
+  const scene = await buildScene(zone)
 
   const worldUniforms = {
     u_lightWorldPos: [0, 0, 0], // Updated in render loop
@@ -122,7 +124,7 @@ window.onload = async () => {
    * @param {number} _now - The DOMHighResTimeStamp from requestAnimationFrame
    */
   async function render(_now) {
-    // Handle camera movement & rotation
+    // Handle camera movement &amp; rotation
     const camTarget = vec3.fromValues(0, 0, 0)
     const camPos = vec3.fromValues(10, 8 + cameraParam.height, 10)
     vec3.rotateY(camPos, camPos, camTarget, cameraParam.angle)
@@ -134,7 +136,7 @@ window.onload = async () => {
     worldUniforms.u_viewInverse = camera // Add the view inverse to the uniforms, we need it for shading
 
     // Move the light to the player position
-    worldUniforms.u_lightWorldPos = [player.position[0] + 4, player.position[1] + 12, player.position[2] + 4]
+    worldUniforms.u_lightWorldPos = [player.position[0] + 8, player.position[1] + 8, player.position[2] + 8]
 
     // An isometric projection
     const projection = mat4.ortho(
@@ -157,7 +159,7 @@ window.onload = async () => {
 
     // Draw the models/instances
     gl.useProgram(modelProg.program)
-    for (const instance of zoneInstances) {
+    for (const instance of scene) {
       gl.disable(gl.BLEND)
       if (instance.transparent) {
         gl.enable(gl.BLEND)
@@ -204,7 +206,7 @@ function renderInstance(instance, programInfo, uniforms, viewProjection) {
   }
   uniforms.u_world = world
 
-  // Populate u_worldInverseTranspose - used for normals & shading
+  // Populate u_worldInverseTranspose - used for normals &amp; shading
   mat4.invert(uniforms.u_worldInverseTranspose, world)
   mat4.transpose(uniforms.u_worldInverseTranspose, uniforms.u_worldInverseTranspose)
 
@@ -260,3 +262,26 @@ function renderSprite(sprite, programInfo, view, projection) {
   twgl.setUniforms(programInfo, uniforms)
   twgl.drawBufferInfo(gl, sprite.buffers)
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Instance.html">Instance</a></li><li><a href="Material.html">Material</a></li><li><a href="Model.html">Model</a></li><li><a href="Part.html">Part</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="Tile.html">Tile</a></li><li><a href="Zone.html">Zone</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addModel">addModel</a></li><li><a href="global.html#bindControls">bindControls</a></li><li><a href="global.html#buildScene">buildScene</a></li><li><a href="global.html#fetchFile">fetchFile</a></li><li><a href="global.html#fetchShaders">fetchShaders</a></li><li><a href="global.html#getGl">getGl</a></li><li><a href="global.html#gl">gl</a></li><li><a href="global.html#glContext">glContext</a></li><li><a href="global.html#hideOverlay">hideOverlay</a></li><li><a href="global.html#parseMTL">parseMTL</a></li><li><a href="global.html#parseOBJ">parseOBJ</a></li><li><a href="global.html#renderInstance">renderInstance</a></li><li><a href="global.html#renderSprite">renderSprite</a></li><li><a href="global.html#setOverlay">setOverlay</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sat Mar 04 2023 16:22:16 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

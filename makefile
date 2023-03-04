@@ -7,8 +7,9 @@ REPO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BS_PATH := $(REPO_DIR)/bin/node_modules/.bin/browser-sync
 PR_PATH := $(REPO_DIR)/bin/node_modules/.bin/prettier
 ESL_PATH := $(REPO_DIR)/bin/node_modules/.bin/eslint
+JSDOC_PATH := $(REPO_DIR)/bin/node_modules/.bin/jsdoc
 
-.PHONY: help install-tools local-server lint lint-fix
+.PHONY: help install-tools local-server lint lint-fix docs
 .DEFAULT_GOAL := help
 
 help: ## 💬 This help message :)
@@ -20,6 +21,7 @@ install-tools: ## 🔮 Install dev tools into project bin directory
 	@$(BS_PATH) --version > /dev/null 2>&1 || npm install --prefix ./bin browser-sync
 	@$(PR_PATH) -v > /dev/null 2>&1 || npm install --prefix ./bin prettier
 	@$(ESL_PATH) -v > /dev/null 2>&1 || npm install --prefix ./bin eslint
+	@$(JSDOC_PATH) -v > /dev/null 2>&1 || npm install --prefix ./bin jsdoc
 	npm install --prefix ./bin eslint-plugin-jsdoc@latest 
 
 lint: ## 🌟 Lint & format check only, sets exit code on error
@@ -35,3 +37,7 @@ lint-fix: ## 📝 Lint & format, attempts to fix errors & modify code
 local-server: ## 🌐 Start a local HTTP server for development
 	@figlet $@ || true
 	@$(BS_PATH) start --config etc/bs-config.js
+
+docs: ## 📚 Generate documentation
+	@figlet $@ || true
+	@$(JSDOC_PATH) -c .jsdoc.json -d docs

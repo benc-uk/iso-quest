@@ -3,7 +3,7 @@
 // Ben Coleman, 2023
 // ===============================================================================
 
-/** @type {WebGL2RenderingContext} A shared global singleton WebGL2 context */
+/** @type {WebGL2RenderingContext} */
 let glContext
 
 /**

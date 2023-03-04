@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: zone.mjs</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: zone.mjs</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { DEG_90 } from './consts.mjs'
+import { Instance, Model } from './models.mjs'
+
+const ROOM_SIZE = 16
+const FLOOR = 1
+const WALL = 0
+const EXIT = 2
+
+/**
+ * Zone holds the playing area &amp; tiles the player is currently in
+ */
+export class Zone {
+  /**  @type {Tile[][]} */
+  tiles = []
+
+  /**
+   * Creates an instance of Zone.
+   *
+   * @param {number} width - Width of room in tiles
+   * @param {number} height - Height of room in tiles
+   */
+  constructor(width, height) {
+    this.width = width
+    this.height = height
+
+    this.tiles = new Array(ROOM_SIZE)
+
+    for (let x = 0; x &lt; ROOM_SIZE; x++) {
+      this.tiles[x] = new Array(ROOM_SIZE)
+      for (let y = 0; y &lt; ROOM_SIZE; y++) {
+        this.tiles[x][y] = new Tile(x, y)
+      }
+    }
+
+    for (let x = 1; x &lt; width + 1; x++) {
+      for (let y = 1; y &lt; height + 1; y++) {
+        this.tiles[x][y].impassable = false
+        this.tiles[x][y].wall = false
+      }
+    }
+
+    // this.cells[0][2] = EXIT
+
+    // this.cells[5][1] = FLOOR
+    // this.cells[4][1] = FLOOR
+    // this.cells[3][4] = FLOOR
+    // this.cells[3][5] = FLOOR
+
+    // this.cells[2][6] = FLOOR
+    // this.cells[1][6] = FLOOR
+    // this.cells[0][6] = FLOOR
+    // this.cells[3][6] = FLOOR
+    // this.cells[2][7] = FLOOR
+    // this.cells[1][7] = FLOOR
+    // this.cells[0][7] = FLOOR
+    // this.cells[3][7] = FLOOR
+    // this.cells[2][8] = FLOOR
+    // this.cells[1][8] = FLOOR
+    // this.cells[0][8] = FLOOR
+    // this.cells[3][8] = FLOOR
+  }
+
+  /**
+   * Creates instances of the models needed to render the room
+   *
+   * @param {Map&lt;string, Model>} models - Model cache
+   * @returns {Instance[]} - List of instances that make up the room
+   */
+  buildInstances(models) {
+    /** @type {Instance[]} */
+    const instances = []
+
+    // add all the floor tiles from the room
+    for (let x = 0; x &lt; ROOM_SIZE; x++) {
+      for (let y = 0; y &lt; ROOM_SIZE; y++) {
+        if (!this.tiles[x][y].wall) {
+          const floorInstance = new Instance(models['floor'], [x * 16, -9, y * 16])
+          floorInstance.rotateX(DEG_90)
+          instances.push(floorInstance)
+        }
+      }
+    }
+
+    // add all the walls from the room
+    for (let x = 0; x &lt; ROOM_SIZE; x++) {
+      for (let y = 0; y &lt; ROOM_SIZE; y++) {
+        // if (this.cells[x][y] === EXIT) {
+        //   const doorInstance = new Instance(models['door'], [x * 16 + 8, 0, y * 16])
+        //   const wallInstanceTop = new Instance(models['block'], [x * 16 + 6, 16, y * 16])
+        //   wallInstanceTop.scale = [1, 1, 0.5]
+        //   wallInstanceTop.rotateY(DEG_90)
+        //   doorInstance.rotateY(DEG_90)
+        //   instances.push(doorInstance, wallInstanceTop)
+        // }
+        // if (this.cells[x][y].wall) {
+        //   if (x === 0 || this.cells[x - 1][y].wall) {
+        //     const wallInstance = new Instance(models['block'], [(x - 1) * 16 + 6, 0, y * 16])
+        //     const wallInstanceTop = new Instance(models['block'], [(x - 1) * 16 + 6, 16, y * 16])
+        //     wallInstance.rotateY(DEG_90)
+        //     wallInstanceTop.rotateY(DEG_90)
+        //     wallInstance.scale = [1, 1, 0.5]
+        //     wallInstanceTop.scale = [1, 1, 0.5]
+        //     instances.push(wallInstance, wallInstanceTop)
+        //   }
+        //   if (y === 0 || this.cells[x][y - 1].wall) {
+        //     const wallInstance = new Instance(models['block'], [x * 16, 0, (y - 1) * 16 + 6])
+        //     const wallInstanceTop = new Instance(models['block'], [x * 16, 16, (y - 1) * 16 + 6])
+        //     wallInstance.scale = [0.9999, 1, 0.5]
+        //     wallInstanceTop.scale = [0.9999, 1, 0.5]
+        //     instances.push(wallInstance, wallInstanceTop)
+        //   }
+        // }
+      }
+    }
+
+    return instances
+  }
+}
+
+export class Exit {
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+    this.toZone = null
+    this.fromZone = null
+  }
+}
+
+/**
+ * Tile holds the data for a single tile in the room
+ */
+export class Tile {
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+    this.impassable = true
+    this.exit = null
+    this.wall = true
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Instance.html">Instance</a></li><li><a href="Material.html">Material</a></li><li><a href="Model.html">Model</a></li><li><a href="Part.html">Part</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="Tile.html">Tile</a></li><li><a href="Zone.html">Zone</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addModel">addModel</a></li><li><a href="global.html#bindControls">bindControls</a></li><li><a href="global.html#buildScene">buildScene</a></li><li><a href="global.html#fetchFile">fetchFile</a></li><li><a href="global.html#fetchShaders">fetchShaders</a></li><li><a href="global.html#getGl">getGl</a></li><li><a href="global.html#gl">gl</a></li><li><a href="global.html#glContext">glContext</a></li><li><a href="global.html#hideOverlay">hideOverlay</a></li><li><a href="global.html#parseMTL">parseMTL</a></li><li><a href="global.html#parseOBJ">parseOBJ</a></li><li><a href="global.html#renderInstance">renderInstance</a></li><li><a href="global.html#renderSprite">renderSprite</a></li><li><a href="global.html#setOverlay">setOverlay</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sat Mar 04 2023 16:22:16 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
