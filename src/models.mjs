@@ -5,6 +5,9 @@ import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 
 const OBJ_PATH = './objects/'
 
+/** @type {Map<string, Model>} */
+const cache = new Map()
+
 /**
  * Holds a 3D model, as a list of parts, each with a material
  * Plus a set of materials, each with a set of properties
@@ -146,10 +149,14 @@ export class Instance {
   transparent = false
 
   /**
-   * @param {Model} model - Model to use for this instance
+   * @param {Model|undefined} model - Model to use for this instance
    * @param {number[]} position - Position of the instance
    */
   constructor(model, position) {
+    if (!model) {
+      throw new Error('Model is required')
+    }
+
     this.position = position
     this.model = model
   }
@@ -165,4 +172,31 @@ export class Instance {
   rotateZ(angle) {
     this.rotate[2] += angle
   }
+}
+
+/**
+ * Helper function get a model from the cache
+ *
+ * @param {string} name - Name of the model
+ * @returns {Model|undefined} - Model if found, undefined otherwise
+ */
+export function getModel(name) {
+  console.log(cache)
+  if (!cache.has(name)) {
+    throw new Error(`Model ${name} not loaded in cache`)
+  }
+
+  return cache.get(name)
+}
+
+/**
+ * Helper function to add a model to the cache
+ *
+ * @param {string} name - Name of the model
+ */
+export function loadModel(name) {
+  const model = new Model(name)
+  model.parse()
+
+  cache.set(name, model)
 }

@@ -1,6 +1,8 @@
 import { Zone } from './zone.mjs'
 import { Sprite } from './sprites.mjs'
+import { TILESZ } from './consts.mjs'
 
+/** Player class, of which there is a single instance */
 export class Player {
   /** @type {Sprite} */
   sprite
@@ -11,7 +13,7 @@ export class Player {
   /** @type {Zone} */
   zone
 
-  /** @type {Function} */
+  /** @type {Function} - Called when the */
   zoneChangeCallback
 
   constructor() {
@@ -26,12 +28,11 @@ export class Player {
    */
   setZone(zone) {
     this.zone = zone
-    console.log(`### Player zone set to ${zone}`)
     this.zoneChangeCallback(zone)
   }
 
   /**
-   * Set the position of the player
+   * Set the position of the player in absolute world coordinates
    *
    * @param {number} x - x position
    * @param {number} y - y position
@@ -40,6 +41,16 @@ export class Player {
   setPosition(x, y, z) {
     this.position = [x, y, z]
     this.sprite.position = [x, y, z]
+  }
+
+  /**
+   * Set the position of the player in terms of tile coordinates
+   *
+   * @param {number} x - x position
+   * @param {number} y - y position
+   */
+  setTilePosition(x, y) {
+    this.setPosition(x * TILESZ, this.position[1], y * TILESZ)
   }
 
   move(dx, dy) {
@@ -52,14 +63,14 @@ export class Player {
     console.log(`### Move to ${newX}, ${newY}`)
 
     // check if the new position is a wall
-    const cellX = Math.round(collX / 16)
-    const cellY = Math.round(collY / 16)
+    const cellX = Math.round(collX / TILESZ)
+    const cellY = Math.round(collY / TILESZ)
     const targetCell = tiles[cellX][cellY]
     console.log(`### Cell is ${cellX}, ${cellY}`)
 
     if (targetCell.isExit()) {
       this.setZone(targetCell.exit?.targetZone)
-      this.setPosition(targetCell.exit?.targetX * 16, this.position[1], targetCell.exit?.targetY * 16)
+      this.setPosition(targetCell.exit?.targetX * TILESZ, this.position[1], targetCell.exit?.targetY * TILESZ)
       return
     }
 

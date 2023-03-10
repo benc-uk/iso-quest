@@ -7,9 +7,8 @@ import * as twgl from '../lib/twgl/dist/4.x/twgl-full.module.js'
 import * as mat4 from '../lib/gl-matrix/esm/mat4.js'
 import * as vec3 from '../lib/gl-matrix/esm/vec3.js'
 import { fetchShaders, getGl, setOverlay } from './utils.mjs'
-import { buildScene } from './scene.mjs'
 import { Sprite } from './sprites.mjs'
-import { Instance } from './models.mjs'
+import { Instance, loadModel } from './models.mjs'
 import { Player } from './player.mjs'
 import { bindControls } from './control.mjs'
 import { Zone } from './zone.mjs'
@@ -35,6 +34,7 @@ const retroMode = false
 /** @type {WebGL2RenderingContext} */
 let gl
 
+/** @type {Array<Instance>} */
 let zoneInstances = []
 
 // **** Start here ****
@@ -55,7 +55,7 @@ window.onload = async () => {
   const ASPECT = gl.canvas.clientWidth / gl.canvas.clientHeight
 
   const player = new Player()
-  player.setPosition(16, 0, 16)
+  player.setTilePosition(2, 1)
 
   // Bind keyboard controls
   bindControls(player, cameraParam, retroMode)
@@ -78,6 +78,12 @@ window.onload = async () => {
     return // Give up here!
   }
 
+  loadModel('floor')
+  loadModel('block')
+  loadModel('table')
+  loadModel('chest')
+  loadModel('door')
+
   const zone1 = new Zone(3, 4)
   const zone2 = new Zone(5, 5)
   zone1.tiles[0][2].setExit(zone2, 1, 4)
@@ -88,21 +94,8 @@ window.onload = async () => {
   zone1.tiles[3][4].floor()
   zone1.tiles[3][5].floor()
 
-  // this.tiles[2][6].floor()
-  // this.tiles[1][6].floor()
-  // this.tiles[0][6].floor()
-  // this.tiles[3][6].floor()
-  // this.tiles[2][7].floor()
-  // this.tiles[1][7].floor()
-  // this.tiles[0][7].floor()
-  // this.tiles[3][7].floor()
-  // this.tiles[2][8].floor()
-  // this.tiles[1][8].floor()
-  // this.tiles[0][8].floor()
-  // this.tiles[3][8].floor()
-
   player.zoneChangeCallback = async (zone) => {
-    zoneInstances = await buildScene(zone)
+    zoneInstances = zone.buildInstances()
   }
   player.setZone(zone1)
 

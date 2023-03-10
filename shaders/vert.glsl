@@ -19,7 +19,7 @@ void main() {
   float distance = length(u_lightWorldPos - worldPos.xyz) * 0.04;
   vec3 lightVector = normalize(u_lightWorldPos - worldPos.xyz);
   vec4 normalWorld = u_worldInverseTranspose * vec4(normal, 1.0);
-  float intensity = clamp(dot(normalWorld.xyz, lightVector), 0.0, 1.0);
+  float intensity = clamp(dot(normalWorld.xyz, lightVector), 0.0, 0.8);
 
   v_lighting = u_lightAmbient + (u_lightColor * (intensity / (distance * distance)));
   gl_Position = u_worldViewProjection * position;
