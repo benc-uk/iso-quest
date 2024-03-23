@@ -4,9 +4,7 @@ import { getGl } from './utils.mjs'
 
 const SIZE = 14
 
-/**
- * @class Sprite
- */
+/** Sprite is a billboarded 2D sprite in 3D space */
 export class Sprite {
   /** @type {string} */
   name = ''
